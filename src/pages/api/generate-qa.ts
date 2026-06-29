@@ -16,6 +16,7 @@ export const POST: APIRoute = async ({ request }) => {
   };
 
   try {
+    // Parse the JSON request body
     let body;
     try {
       body = await request.json();
@@ -29,19 +30,12 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const { rawIdea, competitionFormat } = body;
+    const { deckJSON } = body;
 
     // Validate request parameters
-    if (!rawIdea || typeof rawIdea !== 'string') {
+    if (!deckJSON || typeof deckJSON !== 'object') {
       return new Response(
-        JSON.stringify({ error: 'Missing or invalid parameter: rawIdea' }),
-        { status: 400, headers }
-      );
-    }
-
-    if (!competitionFormat || typeof competitionFormat !== 'string') {
-      return new Response(
-        JSON.stringify({ error: 'Missing or invalid parameter: competitionFormat' }),
+        JSON.stringify({ error: 'Missing or invalid parameter: deckJSON' }),
         { status: 400, headers }
       );
     }
@@ -62,63 +56,49 @@ export const POST: APIRoute = async ({ request }) => {
     const responseSchema = {
       type: Type.OBJECT,
       properties: {
-        companyName: {
-          type: Type.STRING,
-          description: 'The standard or suggested name of the startup/company',
-        },
-        slides: {
+        predictedJudgeQuestions: {
           type: Type.ARRAY,
           items: {
             type: Type.OBJECT,
             properties: {
-              slideNumber: {
-                type: Type.INTEGER,
-                description: 'The 1-based index of this slide in the deck sequence',
-              },
-              title: {
+              id: {
                 type: Type.STRING,
-                description: 'The impact-driven slide title or headline',
+                description: 'A unique identifier for this question (e.g., Q1, Q2, etc.)',
               },
-              bulletPoints: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.STRING,
-                },
-                description: '3-4 concise, high-value bullet points detailing core metrics or arguments',
-              },
-              storytellingPurpose: {
+              question: {
                 type: Type.STRING,
-                description: 'The strategic narrative purpose explaining why this slide is here',
+                description: 'A tough, direct question probing a vulnerability or gap in the business model or tech.',
               },
-              visualRecommendation: {
+              reasonForAsking: {
                 type: Type.STRING,
-                description: 'A layout or graphical recommendation for designing this slide',
+                description: 'The specific weakness, gap, or missing metric in the deck that prompted this question.',
+              },
+              idealAnswerFramework: {
+                type: Type.STRING,
+                description: 'Strategic advice on how the founder should structure their response to defend and defuse the point.',
               },
             },
-            required: [
-              'slideNumber',
-              'title',
-              'bulletPoints',
-              'storytellingPurpose',
-              'visualRecommendation',
-            ],
+            required: ['id', 'question', 'reasonForAsking', 'idealAnswerFramework'],
           },
+          description: 'A list of highly targeted questions predicting what a VC or judge will ask.',
         },
       },
-      required: ['companyName', 'slides'],
+      required: ['predictedJudgeQuestions'],
     };
 
-    // System instruction forcing the model to act as an elite VC pitch deck designer
+    // System instruction forcing the model to act as a highly critical VC / judge
     const systemInstruction =
-      'You are an elite venture capital pitch deck designer and strategic startup consultant. ' +
-      'Your task is to analyze the raw startup concept and structure a highly persuasive, logically sequenced slide deck. ' +
-      'Adapt the slide count, narrative pacing, and technical depth to perfectly match the specified competition format (e.g. 3-minute quick pitch, 10-minute presentation, demo day, or deep-dive VC meeting). ' +
-      'Write punchy, professional copy for the bullet points and specify concrete visual suggestions for each slide.';
+      'You are a highly critical, elite venture capital investor and startup competition judge. ' +
+      'Your job is to thoroughly analyze the provided startup pitch deck structure, identify critical gaps, ' +
+      'vulnerabilities, and missing business metrics (such as unit economics, customer acquisition costs, ' +
+      'defensibility, tech complexity, or market sizing), and ask tough, direct, and challenging questions. ' +
+      'For each question, explain the vulnerability that triggered it and provide a strategic answering framework ' +
+      'showing the founder how to address it successfully.';
 
     // Execute generation with gemini-2.5-flash
     const response = await client.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `Generate a pitch deck structure for the following:\n\nRaw Idea:\n${rawIdea}\n\nCompetition/Presentation Format:\n${competitionFormat}`,
+      contents: `Analyze the following pitch deck and predict judge questions:\n\n${JSON.stringify(deckJSON, null, 2)}`,
       config: {
         systemInstruction,
         responseMimeType: 'application/json',
@@ -139,7 +119,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
   } catch (error: any) {
-    console.error('API Error in /api/generate-deck:', error);
+    console.error('API Error in /api/generate-qa:', error);
     return new Response(
       JSON.stringify({
         error: 'Internal Server Error',

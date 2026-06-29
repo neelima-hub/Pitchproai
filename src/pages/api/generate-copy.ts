@@ -16,6 +16,7 @@ export const POST: APIRoute = async ({ request }) => {
   };
 
   try {
+    // Parse the JSON request body
     let body;
     try {
       body = await request.json();
@@ -29,19 +30,12 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const { rawIdea, competitionFormat } = body;
+    const { deckJSON } = body;
 
     // Validate request parameters
-    if (!rawIdea || typeof rawIdea !== 'string') {
+    if (!deckJSON || typeof deckJSON !== 'object') {
       return new Response(
-        JSON.stringify({ error: 'Missing or invalid parameter: rawIdea' }),
-        { status: 400, headers }
-      );
-    }
-
-    if (!competitionFormat || typeof competitionFormat !== 'string') {
-      return new Response(
-        JSON.stringify({ error: 'Missing or invalid parameter: competitionFormat' }),
+        JSON.stringify({ error: 'Missing or invalid parameter: deckJSON' }),
         { status: 400, headers }
       );
     }
@@ -62,63 +56,48 @@ export const POST: APIRoute = async ({ request }) => {
     const responseSchema = {
       type: Type.OBJECT,
       properties: {
-        companyName: {
+        elevatorPitch: {
           type: Type.STRING,
-          description: 'The standard or suggested name of the startup/company',
+          description: 'A punchy, engaging 30-second elevator pitch hook.',
         },
-        slides: {
+        executiveSummary: {
+          type: Type.STRING,
+          description: 'A professional, investor-ready ~300-word executive summary.',
+        },
+        presentationScripts: {
           type: Type.ARRAY,
           items: {
             type: Type.OBJECT,
             properties: {
               slideNumber: {
                 type: Type.INTEGER,
-                description: 'The 1-based index of this slide in the deck sequence',
+                description: 'The corresponding slide number from the input deck.',
               },
-              title: {
+              spokenText: {
                 type: Type.STRING,
-                description: 'The impact-driven slide title or headline',
-              },
-              bulletPoints: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.STRING,
-                },
-                description: '3-4 concise, high-value bullet points detailing core metrics or arguments',
-              },
-              storytellingPurpose: {
-                type: Type.STRING,
-                description: 'The strategic narrative purpose explaining why this slide is here',
-              },
-              visualRecommendation: {
-                type: Type.STRING,
-                description: 'A layout or graphical recommendation for designing this slide',
+                description: 'The exact script the founder should read aloud when this slide is displayed.',
               },
             },
-            required: [
-              'slideNumber',
-              'title',
-              'bulletPoints',
-              'storytellingPurpose',
-              'visualRecommendation',
-            ],
+            required: ['slideNumber', 'spokenText'],
           },
+          description: 'A list of spoken scripts matching each slide in the deck.',
         },
       },
-      required: ['companyName', 'slides'],
+      required: ['elevatorPitch', 'executiveSummary', 'presentationScripts'],
     };
 
-    // System instruction forcing the model to act as an elite VC pitch deck designer
+    // System instruction forcing the model to act as an elite startup copywriter
     const systemInstruction =
-      'You are an elite venture capital pitch deck designer and strategic startup consultant. ' +
-      'Your task is to analyze the raw startup concept and structure a highly persuasive, logically sequenced slide deck. ' +
-      'Adapt the slide count, narrative pacing, and technical depth to perfectly match the specified competition format (e.g. 3-minute quick pitch, 10-minute presentation, demo day, or deep-dive VC meeting). ' +
-      'Write punchy, professional copy for the bullet points and specify concrete visual suggestions for each slide.';
+      'You are an elite startup copywriter, investor relations expert, and presentation speech coach. ' +
+      'Your task is to write high-converting copy based on a startup pitch deck structure. ' +
+      'Generate a compelling 30-second elevator pitch hook, a thorough ~300-word professional executive summary, ' +
+      'and slide-by-slide spoken scripts for the founder to read aloud. Ensure the scripts match the logic, content, ' +
+      'and slide numbering of the provided deck.';
 
     // Execute generation with gemini-2.5-flash
     const response = await client.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `Generate a pitch deck structure for the following:\n\nRaw Idea:\n${rawIdea}\n\nCompetition/Presentation Format:\n${competitionFormat}`,
+      contents: `Generate copy assets for the following pitch deck:\n\n${JSON.stringify(deckJSON, null, 2)}`,
       config: {
         systemInstruction,
         responseMimeType: 'application/json',
@@ -139,7 +118,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
   } catch (error: any) {
-    console.error('API Error in /api/generate-deck:', error);
+    console.error('API Error in /api/generate-copy:', error);
     return new Response(
       JSON.stringify({
         error: 'Internal Server Error',

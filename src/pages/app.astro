@@ -1461,4 +1461,345 @@ import {
 
   </script>
 
+  <script>
+    // Client-side script to wire up the frontend to the backend API routes and render payloads
+    document.addEventListener('DOMContentLoaded', () => {
+      const btnRunAnalysis = document.querySelector('#btn-run-analysis');
+      const textareaConcept = document.querySelector('#concept-text') as HTMLTextAreaElement;
+      const terminalLogs = document.querySelector('#terminal-logs');
+
+      // Shared flag for unlocking tab transitions
+      let generationDone = false;
+
+      // Unlocking tabs logic
+      const unlockTabs = () => {
+        const tabs = ['deck', 'coach', 'summary'];
+        tabs.forEach(tabName => {
+          const btn = document.getElementById(`nav-${tabName}`);
+          if (btn) {
+            btn.removeAttribute('disabled');
+            btn.classList.remove('opacity-60');
+            btn.classList.add('hover:bg-white/5');
+            btn.querySelector('.lock-icon')?.remove();
+          }
+        });
+
+        // Show the top unlocked alert banner
+        const unlockedBanner = document.getElementById('unlocked-banner');
+        if (unlockedBanner) {
+          unlockedBanner.classList.remove('hidden');
+        }
+      };
+
+      // Toast function
+      const showToastMessage = (msg: string) => {
+        const toast = document.getElementById('app-toast');
+        const toastMsg = document.getElementById('toast-message');
+        if (toast && toastMsg) {
+          toastMsg.textContent = msg;
+          toast.classList.remove('translate-y-20', 'opacity-0');
+          toast.classList.add('translate-y-0', 'opacity-100');
+          
+          setTimeout(() => {
+            toast.classList.add('translate-y-20', 'opacity-0');
+            toast.classList.remove('translate-y-0', 'opacity-100');
+          }, 3000);
+        }
+      };
+
+      // Override Tab Switcher Logic to bypass the old module-scoped block-check
+      const tabButtons = document.querySelectorAll('.nav-item-btn');
+      const tabPanels = document.querySelectorAll('.app-tab-panel');
+
+      tabButtons.forEach(btn => {
+        const newTabBtn = btn.cloneNode(true) as HTMLButtonElement;
+        btn.parentNode?.replaceChild(newTabBtn, btn);
+        
+        newTabBtn.addEventListener('click', () => {
+          const targetTab = newTabBtn.getAttribute('data-tab');
+          if (!targetTab) return;
+          
+          if (targetTab !== 'upload' && !generationDone) {
+            showToastMessage("Please run the AI Analysis first to unlock this feature!");
+            return;
+          }
+          
+          // Switch active state classes
+          tabButtons.forEach(b => {
+            const currentTab = b.getAttribute('data-tab');
+            const actualBtn = document.getElementById(`nav-${currentTab}`) as HTMLButtonElement;
+            if (actualBtn) {
+              if (currentTab === targetTab) {
+                actualBtn.classList.add('bg-white/10', 'text-white');
+                actualBtn.classList.remove('text-gray-400', 'hover:bg-white/5');
+              } else {
+                actualBtn.classList.remove('bg-white/10', 'text-white');
+                if (actualBtn.hasAttribute('disabled')) {
+                  actualBtn.classList.add('text-gray-400');
+                } else {
+                  actualBtn.classList.add('text-gray-400', 'hover:bg-white/5');
+                }
+              }
+            }
+          });
+
+          // Toggle panels
+          tabPanels.forEach(panel => {
+            if (panel.getAttribute('id') === `tab-content-${targetTab}`) {
+              panel.classList.remove('hidden');
+              panel.classList.add('flex');
+            } else {
+              panel.classList.add('hidden');
+              panel.classList.remove('flex');
+            }
+          });
+        });
+      });
+
+      // 1. Render function for the Pitch Deck (Grid of Slide Cards)
+      const renderDeck = (deckJSON: any) => {
+        const deckWorkspaceGrid = document.querySelector('#tab-content-deck > .grid');
+        if (deckWorkspaceGrid) {
+          deckWorkspaceGrid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+          deckWorkspaceGrid.innerHTML = deckJSON.slides.map((slide: any) => `
+            <div class="bg-[#0B0B0F] border border-gray-800 rounded-2xl p-6 flex flex-col justify-between shadow-xl relative overflow-hidden">
+              <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(108,99,255,0.05),transparent_60%)] pointer-events-none"></div>
+              
+              <div class="relative z-10">
+                <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+                  <span class="text-[10px] bg-pitchpro-accent/20 text-pitchpro-accent px-2 py-0.5 rounded font-mono font-bold uppercase">
+                    Slide ${slide.slideNumber}
+                  </span>
+                  <span class="text-[9px] text-gray-500 font-mono">Theme: Obsidian Dark</span>
+                </div>
+                
+                <h3 class="text-base sm:text-lg font-heading font-bold text-white mb-3 tracking-tight">
+                  ${slide.title}
+                </h3>
+                
+                <ul class="space-y-2 mb-6 text-xs text-gray-300">
+                  ${slide.bulletPoints.map((point: string) => `
+                    <li class="flex items-start">
+                      <span class="text-pitchpro-accent mr-2 shrink-0">•</span>
+                      <span>${point}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+
+              <div class="mt-4 pt-4 border-t border-white/5 space-y-3 relative z-10">
+                <div>
+                  <span class="text-[9px] text-gray-500 font-mono uppercase block mb-1">Storytelling Purpose</span>
+                  <p class="text-xs text-gray-400 italic leading-relaxed">
+                    "${slide.storytellingPurpose}"
+                  </p>
+                </div>
+                <div class="bg-white/[0.02] border border-white/5 rounded-xl p-3">
+                  <span class="text-[9px] text-pitchpro-accent font-mono uppercase block mb-1">Visual Recommendation</span>
+                  <p class="text-xs text-gray-400 leading-normal">
+                    ${slide.visualRecommendation}
+                  </p>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Update titles on the page
+        const deckTitleRender = document.getElementById('deck-title-render');
+        if (deckTitleRender) {
+          deckTitleRender.textContent = deckJSON.companyName;
+        }
+      };
+
+      // 2. Render function for the Executive Summary
+      const renderSummary = (companyName: string, summary: string, pitch: string) => {
+        const execTextArea = document.getElementById('exec-text-area');
+        const elevatorTextArea = document.getElementById('elevator-text-area');
+
+        if (execTextArea) {
+          execTextArea.innerHTML = `
+            <p class="text-white font-bold mb-3"># EXECUTIVE SUMMARY: ${companyName.toUpperCase()}</p>
+            <p class="leading-relaxed whitespace-pre-wrap">${summary}</p>
+          `;
+
+          // Update word count label
+          const execCountElement = execTextArea.closest('.bg-\\[\\#09090C\\]')?.querySelector('.border-t span:first-child');
+          if (execCountElement) {
+            const words = summary.trim().split(/\s+/).length;
+            execCountElement.textContent = `Length: ${words} words`;
+          }
+        }
+
+        if (elevatorTextArea) {
+          elevatorTextArea.innerHTML = `
+            <p class="italic text-gray-300 leading-relaxed">"${pitch}"</p>
+          `;
+
+          // Update word count label
+          const elevatorCountElement = elevatorTextArea.closest('.bg-\\[\\#09090C\\]')?.querySelector('.border-t span:first-child');
+          if (elevatorCountElement) {
+            const words = pitch.trim().split(/\s+/).length;
+            elevatorCountElement.textContent = `Words: ${words}`;
+          }
+        }
+      };
+
+      // 3. Render function for the Rehearsal Coach (predictedJudgeQuestions)
+      const renderQA = (questions: any[]) => {
+        const judgeQaContainer = document.getElementById('judge-qa-container');
+        const coachScorecard = document.getElementById('coach-scorecard');
+        const scorecardUnlockedTag = document.getElementById('scorecard-unlocked-tag');
+
+        if (coachScorecard) {
+          coachScorecard.classList.remove('opacity-50');
+        }
+        if (scorecardUnlockedTag) {
+          scorecardUnlockedTag.textContent = 'UNLOCKED';
+          scorecardUnlockedTag.className = 'text-[9px] bg-pitchpro-success/20 text-pitchpro-success px-1.5 py-0.5 rounded font-mono font-bold';
+        }
+
+        if (judgeQaContainer) {
+          judgeQaContainer.innerHTML = questions.map((question: any) => `
+            <div class="bg-white/5 border border-white/5 rounded-xl p-3 relative overflow-hidden group/qa cursor-pointer hover:bg-white/8 hover:border-white/10 transition-all mb-2.5">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <span class="text-[8px] font-bold text-red-400 uppercase tracking-wide block mb-1">
+                    ${question.id} — Reason: ${question.reasonForAsking}
+                  </span>
+                  <p class="text-[11px] font-semibold text-white mt-0.5">${question.question}</p>
+                  <p class="text-[10px] text-gray-400 hidden mt-2 pt-2 border-t border-white/5 font-normal leading-normal qa-answer">
+                    <strong>Ideal Answer Framework:</strong> ${question.idealAnswerFramework}
+                  </p>
+                </div>
+                <span class="text-xs text-gray-500 font-bold ml-2 shrink-0 group-hover/qa:text-white transition-colors select-none">View Details</span>
+              </div>
+            </div>
+          `).join('');
+
+          // Attach click listeners to Q&A items to toggle details
+          judgeQaContainer.querySelectorAll('.group\\/qa').forEach(item => {
+            item.addEventListener('click', () => {
+              const answer = item.querySelector('.qa-answer');
+              const viewText = item.querySelector('span:last-child');
+              if (answer && viewText) {
+                const isHidden = answer.classList.contains('hidden');
+                if (isHidden) {
+                  answer.classList.remove('hidden');
+                  viewText.textContent = 'Hide';
+                } else {
+                  answer.classList.add('hidden');
+                  viewText.textContent = 'View Details';
+                }
+              }
+            });
+          });
+        }
+      };
+
+      if (btnRunAnalysis && textareaConcept && terminalLogs) {
+        // Clone the button to remove all existing event listeners attached by the simulation script
+        const newBtn = btnRunAnalysis.cloneNode(true) as HTMLButtonElement;
+        btnRunAnalysis.parentNode?.replaceChild(newBtn, btnRunAnalysis);
+
+        newBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+
+          const text = textareaConcept.value.trim();
+          if (!text) {
+            alert('Please enter a concept or idea first.');
+            return;
+          }
+
+          // Disable button and show "Processing..." state
+          newBtn.disabled = true;
+          const originalHTML = newBtn.innerHTML;
+          newBtn.innerHTML = '<span>Processing...</span>';
+
+          // Clear terminal logs
+          terminalLogs.innerHTML = '';
+
+          const appendLog = (message: string, isError = false) => {
+            const row = document.createElement('p');
+            row.className = isError 
+              ? 'text-red-500 font-mono animate-fade-in' 
+              : 'text-green-400 font-mono';
+            row.innerHTML = `<span class="text-pitchpro-accent">&gt;</span> ${message}`;
+            terminalLogs.appendChild(row);
+            terminalLogs.scrollTop = terminalLogs.scrollHeight;
+          };
+
+          try {
+            // Log: Ingesting raw document...
+            appendLog('// Ingesting raw document...');
+
+            // Fetch generate-deck
+            const deckRes = await fetch('/api/generate-deck', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ rawIdea: text, competitionFormat: 'Standard' })
+            });
+
+            if (!deckRes.ok) {
+              const errData = await deckRes.json().catch(() => ({}));
+              throw new Error(`Deck generation failed: ${errData.error || deckRes.statusText}`);
+            }
+
+            const deckJSON = await deckRes.json();
+
+            // Log: Deck skeleton mapped. Generating assets & simulating judge panel...
+            appendLog('// Deck skeleton mapped. Generating assets & simulating judge panel...');
+
+            // Concurrently fetch generate-copy and generate-qa
+            const [copyRes, qaRes] = await Promise.all([
+              fetch('/api/generate-copy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deckJSON })
+              }),
+              fetch('/api/generate-qa', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deckJSON })
+              })
+            ]);
+
+            if (!copyRes.ok) {
+              const errData = await copyRes.json().catch(() => ({}));
+              throw new Error(`Copy generation failed: ${errData.error || copyRes.statusText}`);
+            }
+            if (!qaRes.ok) {
+              const errData = await qaRes.json().catch(() => ({}));
+              throw new Error(`Q&A generation failed: ${errData.error || qaRes.statusText}`);
+            }
+
+            const copyJSON = await copyRes.json();
+            const qaJSON = await qaRes.json();
+
+            // Render all payloads to the DOM
+            renderDeck(deckJSON);
+            renderSummary(deckJSON.companyName, copyJSON.executiveSummary, copyJSON.elevatorPitch);
+            renderQA(qaJSON.predictedJudgeQuestions);
+
+            // Log: Generation Complete. Assets unlocked.
+            appendLog('// Generation Complete. Assets unlocked.');
+
+            // Unlock the dashboard tabs
+            generationDone = true;
+            unlockTabs();
+            showToastMessage("Analysis Complete! All pitch materials unlocked.");
+
+          } catch (error: any) {
+            console.error('API Interactivity Error:', error);
+            appendLog(`Error: ${error.message || error}`, true);
+          } finally {
+            // Re-enable button and reset its text
+            newBtn.disabled = false;
+            newBtn.innerHTML = originalHTML;
+          }
+        });
+      }
+    });
+  </script>
+
 </Layout>
