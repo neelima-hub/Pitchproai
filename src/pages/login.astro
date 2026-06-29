@@ -192,7 +192,7 @@ import Layout from '../layouts/Layout.astro';
   const form = document.getElementById('auth-form') as HTMLFormElement;
   const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
   const btnText = document.getElementById('btn-text') as HTMLSpanElement;
-  const btnSpinner = document.getElementById('btn-spinner') as SVGElement;
+  const btnSpinner = document.getElementById('btn-spinner') as unknown as SVGElement;
   
   const authTitle = document.getElementById('auth-title') as HTMLHeadingElement;
   const authSubtitle = document.getElementById('auth-subtitle') as HTMLParagraphElement;
@@ -209,8 +209,8 @@ import Layout from '../layouts/Layout.astro';
 
   const togglePasswordBtn = document.getElementById('toggle-password') as HTMLButtonElement;
   const passwordInput = document.getElementById('password') as HTMLInputElement;
-  const eyeIconShow = document.getElementById('eye-icon-show') as SVGElement;
-  const eyeIconHide = document.getElementById('eye-icon-hide') as SVGElement;
+  const eyeIconShow = document.getElementById('eye-icon-show') as unknown as SVGElement;
+  const eyeIconHide = document.getElementById('eye-icon-hide') as unknown as SVGElement;
 
   // Toggle Password Visibility
   if (togglePasswordBtn && passwordInput && eyeIconShow && eyeIconHide) {

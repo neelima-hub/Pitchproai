@@ -924,7 +924,7 @@ import {
     const modalForm = document.getElementById('modal-auth-form') as HTMLFormElement;
     const modalSubmitBtn = document.getElementById('modal-submit-btn') as HTMLButtonElement;
     const modalBtnText = document.getElementById('modal-btn-text') as HTMLSpanElement;
-    const modalBtnSpinner = document.getElementById('modal-btn-spinner') as SVGElement;
+    const modalBtnSpinner = document.getElementById('modal-btn-spinner') as unknown as SVGElement;
 
     const modalAuthTitle = document.getElementById('modal-auth-title') as HTMLHeadingElement;
     const modalAuthSubtitle = document.getElementById('modal-auth-subtitle') as HTMLParagraphElement;
@@ -941,8 +941,8 @@ import {
 
     const modalTogglePasswordBtn = document.getElementById('modal-toggle-password') as HTMLButtonElement;
     const modalPasswordInput = document.getElementById('modal-password') as HTMLInputElement;
-    const modalEyeIconShow = document.getElementById('modal-eye-icon-show') as SVGElement;
-    const modalEyeIconHide = document.getElementById('modal-eye-icon-hide') as SVGElement;
+    const modalEyeIconShow = document.getElementById('modal-eye-icon-show') as unknown as SVGElement;
+    const modalEyeIconHide = document.getElementById('modal-eye-icon-hide') as unknown as SVGElement;
 
     function openModal() {
       if (authModal) {
