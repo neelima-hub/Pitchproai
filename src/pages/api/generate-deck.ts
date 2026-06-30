@@ -106,6 +106,10 @@ export const POST: APIRoute = async ({ request }) => {
                 type: Type.STRING,
                 description: 'A layout or graphical recommendation for designing this slide',
               },
+              template: {
+                type: Type.STRING,
+                description: "The layout template to use for this slide. Must be strictly one of: 'A' (Hero/Big Statement, text-centered), 'B' (Split View, text left with abstract graphic/image placeholder box right), or 'C' (Wide Grid, full width text layout).",
+              },
             },
             required: [
               'slideNumber',
@@ -113,6 +117,7 @@ export const POST: APIRoute = async ({ request }) => {
               'bulletPoints',
               'storytellingPurpose',
               'visualRecommendation',
+              'template',
             ],
           },
         },
@@ -125,7 +130,11 @@ export const POST: APIRoute = async ({ request }) => {
       'You are an elite venture capital pitch deck designer and strategic startup consultant. ' +
       'Your task is to analyze the raw startup concept and structure a highly persuasive, logically sequenced slide deck. ' +
       'You MUST generate exactly 10 to 12 slides. Do not generate a short summary deck. ' +
-      'Write punchy, professional copy for the bullet points and specify concrete visual suggestions for each slide.';
+      'Write punchy, professional copy for the bullet points and specify concrete visual suggestions for each slide. ' +
+      'Layout engine rules: ' +
+      'Out of the 10-12 slides generated, a MAXIMUM of exactly 2 slides can use template \'B\' (which features a visual graphic/image placeholder box). ' +
+      'These 2 slides using template \'B\' MUST be placed at a distance from each other (for example, one can be slide 3 or 4, and the other near the ending, such as slide 8 or 9). ' +
+      'All other slides MUST use the text-focused layouts \'A\' or \'C\'.';
 
     // Execute generation with gemini-2.5-flash
     const response = await client.models.generateContent({
@@ -186,7 +195,8 @@ ${competitionFormat}`,
             "Empowering founders to pitch clearly, concisely, and professionally."
           ],
           storytellingPurpose: "Introduce the company name, value proposition, and set the tone for the pitch.",
-          visualRecommendation: "Clean hero section with startup logo, minimal brand color gradient, and clear subtitle."
+          visualRecommendation: "Clean hero section with startup logo, minimal brand color gradient, and clear subtitle.",
+          template: "A"
         },
         {
           slideNumber: 2,
@@ -197,7 +207,8 @@ ${competitionFormat}`,
             "High demand for automated copywriting assistant tools targeting VC guidelines."
           ],
           storytellingPurpose: "Establish user pain points and define the market gap we are addressing.",
-          visualRecommendation: "Split screen: left column listing pain points, right column visualizing market size statistics."
+          visualRecommendation: "Split screen: left column listing pain points, right column visualizing market size statistics.",
+          template: "B"
         },
         {
           slideNumber: 3,
@@ -208,7 +219,8 @@ ${competitionFormat}`,
             "Sequential backend API pipeline resolving free-tier Gemini rate-limit concurrency crashes."
           ],
           storytellingPurpose: "Present the core product offering and demonstrate how it resolves the pain points.",
-          visualRecommendation: "Centered 3-step grid highlighting core features with theme-colored icons."
+          visualRecommendation: "Centered 3-step grid highlighting core features with theme-colored icons.",
+          template: "C"
         }
       ]
     };
