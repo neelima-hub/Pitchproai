@@ -179,6 +179,34 @@ import {
               <input type="file" id="file-input" class="hidden" accept=".pdf,.docx,.txt" />
             </div>
 
+            <!-- Startup Brand Details -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/[0.02] border border-white/5 rounded-2xl p-4 sm:p-5">
+              <div class="flex flex-col gap-1.5">
+                <label for="startup-name" class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  Startup Name <span class="text-pitchpro-accent font-bold">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="startup-name" 
+                  required
+                  placeholder="e.g., PitchPro AI"
+                  class="w-full bg-white/[0.03] border border-white/10 focus:border-pitchpro-accent focus:ring-1 focus:ring-pitchpro-accent rounded-xl p-3 text-xs sm:text-sm text-white placeholder-gray-600 outline-none font-mono"
+                />
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <label for="color-theme" class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  Brand Design / Color <span class="text-pitchpro-accent font-bold">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="color-theme" 
+                  required
+                  placeholder="e.g., Minimalist Blue, Cyberpunk Neon, Clean Corporate"
+                  class="w-full bg-white/[0.03] border border-white/10 focus:border-pitchpro-accent focus:ring-1 focus:ring-pitchpro-accent rounded-xl p-3 text-xs sm:text-sm text-white placeholder-gray-600 outline-none font-mono"
+                />
+              </div>
+            </div>
+
             <!-- Text Area Alternative -->
             <div class="flex flex-col gap-2 bg-white/[0.02] border border-white/5 rounded-2xl p-4 sm:p-5">
               <label for="concept-text" class="text-xs font-bold text-gray-400 uppercase tracking-wider">
@@ -187,6 +215,7 @@ import {
               <textarea 
                 id="concept-text"
                 rows="6"
+                maxlength="10000"
                 placeholder="PitchPro is an AI-powered SaaS platform that helps students and founders turn raw concepts into venture-ready presentations. The core problem is that technologists fail to translate their engineering into commercial impact. We generate slides, pitch speech drafts, and provide an audio rehearsal scoring dashboard..."
                 class="w-full bg-white/[0.03] border border-white/10 focus:border-pitchpro-accent focus:ring-1 focus:ring-pitchpro-accent rounded-xl p-3 text-xs sm:text-sm text-white placeholder-gray-600 outline-none resize-none font-mono"
               ></textarea>
@@ -287,17 +316,13 @@ import {
           <div class="lg:col-span-3 flex flex-col gap-4">
             
             <!-- Slide Board (16:9 Aspect Ratio) -->
-            <div id="slide-canvas" class="aspect-[16/10] sm:aspect-[16/9] w-full rounded-2xl bg-[#09090C] border border-white/10 p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden select-none">
+            <div id="slide-canvas" class="aspect-[16/10] sm:aspect-[16/9] w-full rounded-2xl bg-[#0B0B0F] border border-gray-800/60 shadow-[0_0_0_1px_rgba(255,255,255,0.01)] p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden select-none">
               
               <!-- Background highlights -->
               <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(108,99,255,0.06),transparent_60%)] pointer-events-none"></div>
               
               <!-- Slide Header -->
-              <div class="flex items-center justify-between border-b border-white/5 pb-4">
-                <div class="flex items-center space-x-2">
-                  <img src="/logo.jpeg" class="h-6 w-6 rounded object-cover" />
-                  <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">PitchPro Deck Engine</span>
-                </div>
+              <div class="flex justify-end border-b border-white/5 pb-4">
                 <span id="slide-counter-badge" class="text-[9px] font-mono bg-white/5 px-2 py-0.5 rounded text-gray-400">SLIDE 1/6</span>
               </div>
 
@@ -320,7 +345,7 @@ import {
               <!-- Slide Footer -->
               <div class="flex justify-between items-center text-[9px] text-gray-500 border-t border-white/5 pt-4">
                 <span>Confidential - For Review Only</span>
-                <span id="slide-theme-indicator">Obsidian Dark Theme</span>
+                <span id="slide-theme-indicator"></span>
               </div>
 
             </div>
@@ -417,9 +442,9 @@ import {
             </div>
 
             <!-- Speech To Text Logs -->
-            <div class="bg-[#09090C] border border-white/10 rounded-2xl p-5 flex flex-col gap-3 flex-1 min-h-[180px]">
+            <div class="bg-[#09090C] border border-white/10 rounded-2xl p-5 flex flex-col gap-3 h-48">
               <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Live Rehearsal Transcript</span>
-              <div class="bg-[#040406] border border-white/5 rounded-xl p-3.5 h-36 overflow-y-auto text-xs sm:text-sm text-gray-400 font-mono" id="rehearsal-transcript-box">
+              <div class="bg-[#040406] border border-white/5 rounded-xl p-3.5 h-28 overflow-y-auto text-xs sm:text-sm text-gray-400 font-mono" id="rehearsal-transcript-box">
                 <span class="text-gray-600">// Transcript will write here in real time as you talk...</span>
               </div>
             </div>
@@ -494,19 +519,18 @@ import {
                 </div>
               </div>
 
-              <!-- Mock Judge Q&A List -->
-              <div class="pt-3 border-t border-white/5">
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center mb-3">
-                  <HelpCircle class="h-4 w-4 text-pitchpro-accent mr-1.5" /> Mock Judge Q&A
-                </span>
-                
-                <div class="space-y-2.5 max-h-[160px] overflow-y-auto pr-1" id="judge-qa-container">
-                  <p class="text-[10px] text-gray-500 italic">// Questions will unlock post-rehearsal...</p>
-                </div>
-              </div>
-
             </div>
 
+          </div>
+        </div>
+
+        <!-- Full-Width Mock Judge Q&A Section -->
+        <div class="bg-[#09090C] border border-white/10 rounded-2xl p-6 flex flex-col gap-4 mt-6">
+          <span class="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center">
+            <HelpCircle class="h-4.5 w-4.5 text-pitchpro-accent mr-1.5" /> Predicted Judge Q&A
+          </span>
+          <div class="space-y-3.5 max-h-[600px] overflow-y-auto pr-1" id="judge-qa-container">
+            <p class="text-xs text-gray-500 italic">// Questions will unlock post-rehearsal...</p>
           </div>
         </div>
       </section>
@@ -1386,7 +1410,7 @@ import {
       if (scoreMeter3Val) scoreMeter3Val.textContent = `${score3}%`;
 
       // Generate Mock Judge Questions
-      if (judgeQaContainer) {
+      if (judgeQaContainer && !(window as any).pitchproGenerationDone) {
         judgeQaContainer.innerHTML = `
           <!-- Question 1 -->
           <div class="bg-white/5 border border-white/5 rounded-xl p-3 relative overflow-hidden group/qa cursor-pointer hover:bg-white/8 hover:border-white/10 transition-all">
@@ -1481,6 +1505,8 @@ import {
     document.addEventListener('DOMContentLoaded', () => {
       const btnRunAnalysis = document.querySelector('#btn-run-analysis');
       const textareaConcept = document.querySelector('#concept-text') as HTMLTextAreaElement;
+      const inputStartupName = document.querySelector('#startup-name') as HTMLInputElement;
+      const inputColorTheme = document.querySelector('#color-theme') as HTMLInputElement;
       const terminalLogs = document.querySelector('#terminal-logs');
 
       // Shared flag for unlocking tab transitions
@@ -1489,6 +1515,7 @@ import {
       // Active data payloads for navigation and rendering
       let activeDeck: any = null;
       let activeCopy: any = null;
+      let activeColorTheme = '';
       let currentSlideIndex = 0;
 
       // Unlocking tabs logic
@@ -1585,27 +1612,170 @@ import {
         const slide = slides[index];
         if (!slide) return;
 
-        // 1. Update slide dynamic content
+        let hex = activeDeck.themeHexCode || '#6C63FF';
+        if (!hex.startsWith('#')) {
+          hex = '#' + hex;
+        }
+
+
+
+
+        const isLightTheme = activeColorTheme.toLowerCase().includes('white') || 
+                             activeColorTheme.toLowerCase().includes('light') || 
+                             activeColorTheme.toLowerCase().includes('bright');
+
+        const titleClass = isLightTheme 
+          ? "text-2xl font-extrabold tracking-tight text-slate-900 leading-tight max-w-3xl flex-1 hover:bg-black/5 focus:bg-black/10 focus:outline-none p-1 rounded transition outline-none" 
+          : "text-2xl font-extrabold tracking-tight text-white leading-tight max-w-3xl flex-1 hover:bg-white/5 focus:bg-white/10 focus:outline-none p-1 rounded transition outline-none";
+
+
+
+        const bulletTextHoverClass = isLightTheme 
+          ? "bullet-text flex-1 hover:bg-black/5 focus:bg-black/10 focus:outline-none p-1 rounded transition outline-none" 
+          : "bullet-text flex-1 hover:bg-white/5 focus:bg-white/10 focus:outline-none p-1 rounded transition outline-none";
+
+        const boldTextColor = isLightTheme ? 'text-slate-955 font-bold' : 'text-white font-bold';
+
+        // 1. Update slide dynamic content using Dynamic Layout Templates
         const slideDynamicContent = document.getElementById('slide-dynamic-content');
         if (slideDynamicContent) {
-          slideDynamicContent.innerHTML = `
-            <div class="slide-page-element flex flex-col justify-center h-full">
-              <div class="inline-block bg-pitchpro-accent/15 text-pitchpro-accent text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md mb-4 border border-pitchpro-accent/25 w-max">
-                Slide ${slide.slideNumber}
+          if (index === 0) {
+            // TEMPLATE A: The Hero / Big Statement (Center-aligned layout, massive text)
+            slideDynamicContent.innerHTML = `
+              <div class="slide-page-element flex flex-col justify-center items-center text-center h-full max-w-3xl mx-auto relative z-10 py-4">
+                <!-- Centered radial background glow -->
+                <div style="background: radial-gradient(circle at 50% 50%, ${hex}0c, transparent 55%);" class="absolute inset-0 pointer-events-none"></div>
+                
+                <div class="flex items-center justify-center mb-4 relative z-10">
+                  <div style="background-color: ${hex}26; color: ${hex}; border-color: ${hex}40;" class="inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border w-max select-none">
+                    Slide ${slide.slideNumber}
+                  </div>
+                </div>
+                
+                <h2 id="slide-title-editable" contenteditable="true" class="text-3xl sm:text-4.5xl lg:text-5xl font-extrabold tracking-tight ${isLightTheme ? 'text-slate-900' : 'text-white'} leading-tight mb-6 hover:bg-black/5 focus:bg-black/10 focus:outline-none p-1.5 rounded transition outline-none max-w-2xl relative z-10">
+                  ${slide.title}
+                </h2>
+
+                <div id="slide-bullets-editable" class="space-y-4 max-w-xl mx-auto ${isLightTheme ? 'text-slate-700' : 'text-gray-300'} relative z-10">
+                  ${slide.bulletPoints.map((point: string, i: number) => `
+                    <p data-index="${i}" class="text-xs sm:text-sm leading-relaxed">
+                      <span contenteditable="true" class="bullet-text hover:bg-white/5 focus:bg-white/10 focus:outline-none p-1 rounded transition outline-none inline-block">
+                        ${point.replace(/\*\*(.*?)\*\*/g, `<strong class="${boldTextColor}">$1</strong>`)}
+                      </span>
+                    </p>
+                  `).join('')}
+                </div>
               </div>
-              <h2 class="text-xl sm:text-3.5xl font-heading font-extrabold text-white leading-tight max-w-2xl mb-4">
-                ${slide.title}
-              </h2>
-              <ul class="space-y-2 text-xs sm:text-sm text-gray-300 max-w-xl">
-                ${slide.bulletPoints.map((point: string) => `
-                  <li class="flex items-start">
-                    <span class="text-pitchpro-accent mr-2 shrink-0">•</span>
-                    <span>${point}</span>
-                  </li>
-                `).join('')}
-              </ul>
-            </div>
-          `;
+            `;
+          } else if (index % 2 === 1) {
+            // TEMPLATE B: The Split View (Asymmetric 2-column: text left, shape graphic right)
+            slideDynamicContent.innerHTML = `
+              <div class="slide-page-element flex flex-col justify-center h-full">
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+                  <!-- Left span (3 cols) -->
+                  <div class="lg:col-span-3 flex flex-col justify-center">
+                    <div class="flex items-center justify-between mb-4">
+                      <div style="background-color: ${hex}26; color: ${hex}; border-color: ${hex}40;" class="inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border w-max select-none">
+                        Slide ${slide.slideNumber}
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3.5 mb-6">
+                      <div style="background-color: ${hex};" class="w-1.5 h-9 rounded-full mt-1 shrink-0"></div>
+                      <h2 id="slide-title-editable" contenteditable="true" class="${titleClass}">
+                        ${slide.title}
+                      </h2>
+                    </div>
+
+                    <ul id="slide-bullets-editable" class="space-y-3.5 ${isLightTheme ? 'text-slate-700' : 'text-gray-300'} leading-relaxed">
+                      ${slide.bulletPoints.map((point: string, i: number) => `
+                        <li data-index="${i}" class="flex items-start">
+                          <span style="color: ${hex};" class="mr-2.5 shrink-0 select-none text-sm">•</span>
+                          <span contenteditable="true" class="${bulletTextHoverClass}">
+                            ${point.replace(/\*\*(.*?)\*\*/g, `<strong class="${boldTextColor}">$1</strong>`)}
+                          </span>
+                        </li>
+                      `).join('')}
+                    </ul>
+                  </div>
+
+                  <!-- Right span (2 cols) - Geometric visual placeholder -->
+                  <div class="lg:col-span-2 hidden lg:flex items-center justify-center">
+                    <div class="w-full aspect-[4/3] rounded-2xl border ${isLightTheme ? 'bg-black/[0.02] border-black/5' : 'bg-white/[0.02] border-white/5'} flex items-center justify-center p-6 relative overflow-hidden select-none">
+                      <!-- Visual geometric accent -->
+                      <div style="border-color: ${hex}33;" class="absolute w-36 h-36 rounded-full border border-dashed animate-pulse"></div>
+                      <div style="background-color: ${hex}15; border-color: ${hex}55;" class="w-20 h-20 rounded-full border flex items-center justify-center shadow-lg">
+                        <div style="background-color: ${hex};" class="w-4 h-4 rounded-full"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          } else {
+            // TEMPLATE C: The Wide Grid (Full width title, accent divider, bullet grid below)
+            slideDynamicContent.innerHTML = `
+              <div class="slide-page-element flex flex-col justify-center h-full">
+                <div class="flex items-center justify-between mb-2">
+                  <div style="background-color: ${hex}26; color: ${hex}; border-color: ${hex}40;" class="inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border w-max select-none">
+                    Slide ${slide.slideNumber}
+                  </div>
+                </div>
+                
+                <div class="mb-4">
+                  <h2 id="slide-title-editable" contenteditable="true" class="${titleClass} mb-3 inline-block">
+                    ${slide.title}
+                  </h2>
+                  <div style="background-color: ${hex}; opacity: 0.35;" class="h-0.5 w-full rounded-full"></div>
+                </div>
+
+                <ul id="slide-bullets-editable" class="grid grid-cols-1 md:grid-cols-2 gap-5 ${isLightTheme ? 'text-slate-700' : 'text-gray-300'} leading-relaxed mt-2">
+                  ${slide.bulletPoints.map((point: string, i: number) => `
+                    <li data-index="${i}" class="flex items-start bg-white/[0.01] border border-white/[0.02] rounded-xl p-3">
+                      <span style="color: ${hex};" class="mr-2.5 shrink-0 select-none text-sm mt-0.5">•</span>
+                      <span contenteditable="true" class="${bulletTextHoverClass}">
+                        ${point.replace(/\*\*(.*?)\*\*/g, `<strong class="${boldTextColor}">$1</strong>`)}
+                      </span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            `;
+          }
+
+          // Attach listeners to save edits back to activeDeck.slides in memory
+          const editableTitle = document.getElementById('slide-title-editable');
+          if (editableTitle) {
+            editableTitle.addEventListener('blur', () => {
+              if (activeDeck && activeDeck.slides[currentSlideIndex]) {
+                activeDeck.slides[currentSlideIndex].title = editableTitle.innerText.trim();
+              }
+            });
+          }
+
+          const editableBullets = document.querySelectorAll('#slide-bullets-editable .bullet-text');
+          editableBullets.forEach((el) => {
+            el.addEventListener('blur', () => {
+              const htmlEl = el as HTMLElement;
+              const parentElement = htmlEl.closest('[data-index]');
+              const idxAttr = parentElement?.getAttribute('data-index');
+              if (idxAttr && activeDeck && activeDeck.slides[currentSlideIndex]) {
+                const bulletIdx = parseInt(idxAttr, 10);
+                activeDeck.slides[currentSlideIndex].bulletPoints[bulletIdx] = htmlEl.innerHTML;
+              }
+            });
+          });
+        }
+
+        // Apply theme color border-top to slide canvas
+        const slideCanvas = document.getElementById('slide-canvas');
+        if (slideCanvas) {
+          slideCanvas.style.borderTop = `4px solid ${hex}`;
+          if (isLightTheme) {
+            slideCanvas.className = "aspect-[16/10] sm:aspect-[16/9] w-full rounded-2xl bg-[#F9F9FB] border border-gray-200 shadow-[0_0_0_1px_rgba(0,0,0,0.02)] p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden select-none";
+          } else {
+            slideCanvas.className = "aspect-[16/10] sm:aspect-[16/9] w-full rounded-2xl bg-[#0B0B0F] border border-gray-800/60 shadow-[0_0_0_1px_rgba(255,255,255,0.01)] p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden select-none";
+          }
         }
 
         // 2. Update counter badge & dots
@@ -1617,7 +1787,7 @@ import {
         const slideDots = document.getElementById('slide-dots');
         if (slideDots) {
           slideDots.innerHTML = Array.from({ length: slides.length }).map((_, i) => 
-            `<span class="w-1.5 h-1.5 rounded-full ${i === index ? 'bg-pitchpro-accent' : 'bg-white/20'}"></span>`
+            `<span style="background-color: ${i === index ? hex : 'rgba(255,255,255,0.2)'};" class="w-1.5 h-1.5 rounded-full"></span>`
           ).join('');
         }
 
@@ -1626,16 +1796,22 @@ import {
         if (selectorContainer) {
           const buttons = selectorContainer.querySelectorAll('.slide-selector-btn');
           buttons.forEach((btn, i) => {
-            const numSpan = btn.querySelector('span:first-child');
+            const numSpan = btn.querySelector('span:first-child') as HTMLElement;
             if (i === index) {
-              btn.className = "slide-selector-btn shrink-0 w-36 sm:w-44 lg:w-auto text-left p-3 rounded-xl border border-pitchpro-accent bg-pitchpro-accent/10 text-white transition-all flex items-center space-x-3 text-xs font-bold";
+              btn.className = "slide-selector-btn shrink-0 w-36 sm:w-44 lg:w-auto text-left p-3 rounded-xl border text-white transition-all flex items-center space-x-3 text-xs font-bold";
+              (btn as HTMLElement).style.borderColor = hex;
+              (btn as HTMLElement).style.backgroundColor = `${hex}1a`;
               if (numSpan) {
-                numSpan.className = "w-5 h-5 rounded bg-pitchpro-accent text-white flex items-center justify-center text-[10px] font-bold shrink-0";
+                numSpan.className = "w-5 h-5 rounded text-white flex items-center justify-center text-[10px] font-bold shrink-0";
+                numSpan.style.backgroundColor = hex;
               }
             } else {
               btn.className = "slide-selector-btn shrink-0 w-36 sm:w-44 lg:w-auto text-left p-3 rounded-xl border border-white/5 hover:bg-white/5 text-gray-400 hover:text-white transition-all flex items-center space-x-3 text-xs font-bold";
+              (btn as HTMLElement).style.borderColor = "";
+              (btn as HTMLElement).style.backgroundColor = "";
               if (numSpan) {
                 numSpan.className = "w-5 h-5 rounded bg-white/10 text-gray-400 flex items-center justify-center text-[10px] font-bold shrink-0";
+                numSpan.style.backgroundColor = "";
               }
             }
           });
@@ -1759,6 +1935,9 @@ import {
         const coachScorecard = document.getElementById('coach-scorecard');
         const scorecardUnlockedTag = document.getElementById('scorecard-unlocked-tag');
 
+        // Flag that real API generation has completed so mock coach rehearsal doesn't override Q&A
+        (window as any).pitchproGenerationDone = true;
+
         if (coachScorecard) {
           coachScorecard.classList.remove('opacity-50');
         }
@@ -1768,22 +1947,25 @@ import {
         }
 
         if (judgeQaContainer) {
-          judgeQaContainer.innerHTML = questions.map((question: any) => `
-            <div class="bg-white/5 border border-white/5 rounded-xl p-3 relative overflow-hidden group/qa cursor-pointer hover:bg-white/8 hover:border-white/10 transition-all mb-2.5">
-              <div class="flex items-start justify-between">
-                <div class="flex-1">
-                  <span class="text-[8px] font-bold text-red-400 uppercase tracking-wide block mb-1">
-                    ${question.id} — Reason: ${question.reasonForAsking}
-                  </span>
-                  <p class="text-[11px] font-semibold text-white mt-0.5">${question.question}</p>
-                  <p class="text-[10px] text-gray-400 hidden mt-2 pt-2 border-t border-white/5 font-normal leading-normal qa-answer">
-                    <strong>Ideal Answer Framework:</strong> ${question.idealAnswerFramework}
-                  </p>
+          judgeQaContainer.innerHTML = questions.map((question: any) => {
+            const cleanFramework = question.idealAnswerFramework.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-white">$1</strong>');
+            return `
+              <div class="bg-white/5 border border-white/5 rounded-xl p-5 relative overflow-hidden group/qa cursor-pointer hover:bg-white/8 hover:border-white/10 transition-all mb-3.5">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <span class="text-xs font-bold text-indigo-400 tracking-wide block mb-2">
+                      ${question.id} — Reason: ${question.reasonForAsking}
+                    </span>
+                    <p class="text-base font-semibold text-white mt-0.5">${question.question}</p>
+                    <p class="text-sm text-gray-300 hidden mt-3 pt-3 border-t border-white/5 font-normal leading-relaxed qa-answer">
+                      <strong class="text-white">Ideal Answer Framework:</strong> ${cleanFramework}
+                    </p>
+                  </div>
+                  <span class="text-xs text-gray-400 font-bold ml-4 shrink-0 group-hover/qa:text-white transition-colors select-none">View Details</span>
                 </div>
-                <span class="text-xs text-gray-500 font-bold ml-2 shrink-0 group-hover/qa:text-white transition-colors select-none">View Details</span>
               </div>
-            </div>
-          `).join('');
+            `;
+          }).join('');
 
           // Attach click listeners to Q&A items to toggle details
           judgeQaContainer.querySelectorAll('.group\\/qa').forEach(item => {
@@ -1817,58 +1999,149 @@ import {
             return;
           }
 
-          // Create temporary hidden div for clean layout rendering
-          const tempDiv = document.createElement('div');
-          tempDiv.style.position = 'absolute';
-          tempDiv.style.left = '-9999px';
-          tempDiv.style.width = '1000px';
-          document.body.appendChild(tempDiv);
-
-          // Render clean presentation layouts (ONLY title and bulletPoints)
-          tempDiv.innerHTML = activeDeck.slides.map((slide: any, idx: number) => `
-            <div style="
-              width: 1000px;
-              height: 562.5px; /* 16:9 Ratio */
-              background-color: #0B0B0F;
-              color: #ffffff;
-              padding: 60px;
-              box-sizing: border-box;
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              font-family: 'Inter', sans-serif;
-              ${idx < activeDeck.slides.length - 1 ? 'page-break-after: always;' : ''}
-            ">
-              <div style="font-size: 14px; font-weight: bold; color: #6C63FF; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 2px;">
-                Slide ${slide.slideNumber}
-              </div>
-              <h2 style="font-size: 32px; font-weight: 800; margin: 0 0 24px 0; line-height: 1.2;">
-                ${slide.title}
-              </h2>
-              <ul style="list-style-type: none; padding: 0; margin: 0;">
-                ${slide.bulletPoints.map((point: string) => `
-                  <li style="font-size: 18px; margin-bottom: 12px; display: flex; align-items: start; color: #D1D5DB; line-height: 1.5;">
-                    <span style="color: #6C63FF; margin-right: 12px;">•</span>
-                    <span>${point}</span>
-                  </li>
-                `).join('')}
-              </ul>
+          // Create temporary full-screen overlay (visible for snapshot rendering, but moved offscreen)
+          const overlay = document.createElement('div');
+          overlay.className = "fixed inset-0 bg-[#0B0B0F] z-[9999] flex flex-col items-center justify-center text-white";
+          overlay.innerHTML = `
+            <div class="flex flex-col items-center gap-4">
+              <div class="w-12 h-12 border-4 border-white/10 border-t-pitchpro-accent rounded-full animate-spin"></div>
+              <p class="text-sm font-bold text-gray-300">Generating Your High-Resolution Pitch Deck PDF... Please wait.</p>
             </div>
-          `).join('');
+            <div id="pdf-render-container" style="position: absolute; top: 150%; left: 0; width: 11in; display: block;"></div>
+          `;
+          document.body.appendChild(overlay);
+
+          const renderContainer = document.getElementById('pdf-render-container');
+
+          let hex = activeDeck.themeHexCode || '#6C63FF';
+          if (!hex.startsWith('#')) {
+            hex = '#' + hex;
+          }
+
+          // Render clean presentation layouts (ONLY title and bulletPoints, keeping live user edits)
+          if (renderContainer) {
+            const isLightTheme = activeColorTheme.toLowerCase().includes('white') || 
+                                 activeColorTheme.toLowerCase().includes('light') || 
+                                 activeColorTheme.toLowerCase().includes('bright');
+            const pdfBg = isLightTheme ? '#F9F9FB' : '#0B0B0F';
+            const pdfTitleColor = isLightTheme ? '#0F172A' : '#ffffff';
+            const pdfBulletColor = isLightTheme ? '#334155' : '#D1D5DB';
+            const pdfBoldColor = isLightTheme ? '#0F172A' : '#ffffff';
+            const pdfBorderColor = isLightTheme ? '#E2E8F0' : '#1F2937';
+
+            renderContainer.innerHTML = activeDeck.slides.map((slide: any, i: number) => {
+              let layoutHtml = '';
+
+              if (i === 0) {
+                // TEMPLATE A (Hero / Big Statement)
+                layoutHtml = `
+                  <div class="w-[11in] h-[8.5in] p-16 flex flex-col justify-center items-center text-center border my-4" style="background-color: ${pdfBg}; border-color: ${pdfBorderColor}; border-top: 6px solid ${hex}; page-break-after: always; box-sizing: border-box; font-family: 'Inter', sans-serif; position: relative;">
+                    <!-- Centered radial background glow -->
+                    <div style="position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, ${hex}0c, transparent 55%); pointer-events: none;"></div>
+                    
+                    <div style="font-size: 14px; font-weight: bold; color: ${hex}; text-transform: uppercase; margin-bottom: 24px; letter-spacing: 2px; position: relative; z-index: 10;">
+                      Slide ${slide.slideNumber}
+                    </div>
+                    
+                    <h2 style="font-size: 42px; font-weight: 800; color: ${pdfTitleColor}; line-height: 1.2; margin: 0 0 32px 0; max-width: 800px; position: relative; z-index: 10;">
+                      ${slide.title}
+                    </h2>
+
+                    <div style="max-width: 650px; margin: 0 auto; color: ${pdfBulletColor}; position: relative; z-index: 10;">
+                      ${slide.bulletPoints.map((point: string) => `
+                        <p style="font-size: 20px; line-height: 1.6; margin: 0 0 16px 0;">
+                          ${point.replace(/\*\*(.*?)\*\*/g, `<strong style="font-weight: bold; color: ${pdfBoldColor};">$1</strong>`)}
+                        </p>
+                      `).join('')}
+                    </div>
+                  </div>
+                `;
+              } else if (i % 2 === 1) {
+                // TEMPLATE B (The Split View)
+                layoutHtml = `
+                  <div class="w-[11in] h-[8.5in] p-16 flex flex-col justify-center border my-4" style="background-color: ${pdfBg}; border-color: ${pdfBorderColor}; border-top: 6px solid ${hex}; page-break-after: always; box-sizing: border-box; font-family: 'Inter', sans-serif;">
+                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 40px; align-items: center;">
+                      
+                      <!-- Left (3 cols) -->
+                      <div style="grid-column: span 3; display: flex; flex-direction: column; justify-content: center;">
+                        <div style="font-size: 14px; font-weight: bold; color: ${hex}; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 2px;">
+                          Slide ${slide.slideNumber}
+                        </div>
+                        <div style="display: flex; align-items: start; margin-bottom: 24px;">
+                          <div style="background-color: ${hex}; width: 6px; height: 36px; border-radius: 9999px; margin-right: 14px; flex-shrink: 0;"></div>
+                          <h2 style="font-size: 32px; font-weight: 800; margin: 0; line-height: 1.2; color: ${pdfTitleColor};">
+                            ${slide.title}
+                          </h2>
+                        </div>
+                        <ul style="list-style-type: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; color: ${pdfBulletColor};">
+                          ${slide.bulletPoints.map((point: string) => `
+                            <li style="font-size: 18px; display: flex; align-items: start; line-height: 1.5;">
+                              <span style="color: ${hex}; margin-right: 12px;">•</span>
+                              <span>${point.replace(/\*\*(.*?)\*\*/g, `<strong style="font-weight: bold; color: ${pdfBoldColor};">$1</strong>`)}</span>
+                            </li>
+                          `).join('')}
+                        </ul>
+                      </div>
+
+                      <!-- Right (2 cols) -->
+                      <div style="grid-column: span 2; display: flex; align-items: center; justify-content: center;">
+                        <div style="width: 100%; aspect-ratio: 4/3; border: 1px solid ${isLightTheme ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'}; background-color: ${isLightTheme ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)'}; display: flex; align-items: center; justify-content: center; position: relative; border-radius: 16px;">
+                          <div style="position: absolute; width: 120px; height: 120px; border-radius: 9999px; border: 1px dashed ${hex}33;"></div>
+                          <div style="width: 70px; height: 70px; border-radius: 9999px; border: 1px solid ${hex}55; background-color: ${hex}15; display: flex; align-items: center; justify-content: center;">
+                            <div style="width: 16px; height: 16px; border-radius: 9999px; background-color: ${hex};"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                `;
+              } else {
+                // TEMPLATE C (The Wide Grid)
+                layoutHtml = `
+                  <div class="w-[11in] h-[8.5in] p-16 flex flex-col justify-center border my-4" style="background-color: ${pdfBg}; border-color: ${pdfBorderColor}; border-top: 6px solid ${hex}; page-break-after: always; box-sizing: border-box; font-family: 'Inter', sans-serif;">
+                    
+                    <div style="font-size: 14px; font-weight: bold; color: ${hex}; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 2px;">
+                      Slide ${slide.slideNumber}
+                    </div>
+                    
+                    <div style="margin-bottom: 28px;">
+                      <h2 style="font-size: 32px; font-weight: 800; margin: 0 0 12px 0; line-height: 1.2; color: ${pdfTitleColor};">
+                        ${slide.title}
+                      </h2>
+                      <div style="background-color: ${hex}; opacity: 0.35; height: 2px; width: 100%; border-radius: 9999px;"></div>
+                    </div>
+
+                    <ul style="list-style-type: none; padding: 0; margin: 20px 0 0 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; color: ${pdfBulletColor};">
+                      ${slide.bulletPoints.map((point: string) => `
+                        <li style="font-size: 18px; display: flex; align-items: start; line-height: 1.5; border: 1px solid ${isLightTheme ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)'}; background-color: ${isLightTheme ? 'rgba(0,0,0,0.01)' : 'rgba(255,255,255,0.01)'}; padding: 14px; border-radius: 12px;">
+                          <span style="color: ${hex}; margin-right: 12px; margin-top: 2px;">•</span>
+                          <span>${point.replace(/\*\*(.*?)\*\*/g, `<strong style="font-weight: bold; color: ${pdfBoldColor};">$1</strong>`)}</span>
+                        </li>
+                      `).join('')}
+                    </ul>
+
+                  </div>
+                `;
+              }
+
+              return layoutHtml;
+            }).join('');
+          }
 
           const opt = {
             margin: 0,
-            filename: 'PitchDeck.pdf',
+            filename: `${activeDeck.companyName || 'PitchDeck'}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0B0B0F' },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
             jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
           };
 
-          html2pdf().from(tempDiv).set(opt).save().then(() => {
-            document.body.removeChild(tempDiv);
+          html2pdf().from(renderContainer).set(opt).save().then(() => {
+            document.body.removeChild(overlay);
           }).catch((err: any) => {
             console.error("PDF generation failed:", err);
-            document.body.removeChild(tempDiv);
+            document.body.removeChild(overlay);
           });
         });
       }
@@ -1878,14 +2151,29 @@ import {
         const newBtn = btnRunAnalysis.cloneNode(true) as HTMLButtonElement;
         btnRunAnalysis.parentNode?.replaceChild(newBtn, btnRunAnalysis);
 
-        newBtn.addEventListener('click', async (e) => {
+        newBtn.addEventListener('click', async (e: Event) => {
           e.preventDefault();
 
+          const startupName = inputStartupName ? inputStartupName.value.trim() : '';
+          const colorTheme = inputColorTheme ? inputColorTheme.value.trim() : '';
           const text = textareaConcept.value.trim();
+
+          if (!startupName) {
+            alert('Please enter a Startup Name.');
+            return;
+          }
+
+          if (!colorTheme) {
+            alert('Please enter a Brand Design / Color.');
+            return;
+          }
+
           if (!text) {
             alert('Please enter a concept or idea first.');
             return;
           }
+
+          activeColorTheme = colorTheme;
 
           // Disable button and show "Processing..." state
           newBtn.disabled = true;
@@ -1895,14 +2183,15 @@ import {
           // Clear terminal logs
           terminalLogs.innerHTML = '';
 
+          const logsContainer = terminalLogs as HTMLElement;
           const appendLog = (message: string, isError = false) => {
             const row = document.createElement('p');
             row.className = isError 
               ? 'text-red-500 font-mono animate-fade-in' 
               : 'text-green-400 font-mono';
             row.innerHTML = `<span class="text-pitchpro-accent">&gt;</span> ${message}`;
-            terminalLogs.appendChild(row);
-            terminalLogs.scrollTop = terminalLogs.scrollHeight;
+            logsContainer.appendChild(row);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
           };
 
           try {
@@ -1913,7 +2202,12 @@ import {
             const deckRes = await fetch('/api/generate-deck', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ rawIdea: text, competitionFormat: 'Standard' })
+              body: JSON.stringify({ 
+                rawIdea: text, 
+                competitionFormat: 'Standard',
+                startupName,
+                colorTheme
+              })
             });
 
             if (!deckRes.ok) {
@@ -1926,30 +2220,35 @@ import {
             // Log: Deck skeleton mapped. Generating assets & simulating judge panel...
             appendLog('// Deck skeleton mapped. Generating assets & simulating judge panel...');
 
-            // Concurrently fetch generate-copy and generate-qa
-            const [copyRes, qaRes] = await Promise.all([
-              fetch('/api/generate-copy', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ deckJSON })
-              }),
-              fetch('/api/generate-qa', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ deckJSON })
-              })
-            ]);
+            // Step 1: Sequential Fetch for Copy
+            const copyRes = await fetch('/api/generate-copy', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ deckJSON })
+            });
 
             if (!copyRes.ok) {
               const errData = await copyRes.json().catch(() => ({}));
               throw new Error(`Copy generation failed: ${errData.error || copyRes.statusText}`);
             }
+
+            const copyJSON = await copyRes.json();
+
+            // Log: Copy generated. Simulating judge panel...
+            appendLog('// Copy generated. Simulating judge panel...');
+
+            // Step 2: Sequential Fetch for Q&A
+            const qaRes = await fetch('/api/generate-qa', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ deckJSON })
+            });
+
             if (!qaRes.ok) {
               const errData = await qaRes.json().catch(() => ({}));
               throw new Error(`Q&A generation failed: ${errData.error || qaRes.statusText}`);
             }
 
-            const copyJSON = await copyRes.json();
             const qaJSON = await qaRes.json();
 
             // Save copyJSON for rendering scripts
