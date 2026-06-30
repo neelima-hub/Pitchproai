@@ -87,9 +87,9 @@ export const POST: APIRoute = async ({ request }) => {
       'and slide-by-slide spoken scripts for the founder to read aloud. Ensure the scripts match the logic, content, ' +
       'and slide numbering of the provided deck.';
 
-    // Execute generation with gemini-1.5-flash
+    // Execute generation with gemini-2.5-flash
     const response = await client.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       contents: `Generate copy assets for the following pitch deck:\n\n${JSON.stringify(deckJSON, null, 2)}`,
       config: {
         systemInstruction,

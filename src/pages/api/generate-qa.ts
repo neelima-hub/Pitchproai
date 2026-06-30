@@ -88,9 +88,9 @@ export const POST: APIRoute = async ({ request }) => {
             'For each question, explain the vulnerability that triggered it and provide a strategic answering framework ' +
             'showing the founder how to address it successfully.';
 
-        // Execute generation with gemini-1.5-flash
+        // Execute generation with gemini-2.5-flash
         const response = await client.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.5-flash',
             contents: `Analyze the following pitch deck and predict judge questions:\n\n${JSON.stringify(deckJSON, null, 2)}`,
             config: {
                 systemInstruction,

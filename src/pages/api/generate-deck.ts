@@ -16,7 +16,10 @@ export const POST: APIRoute = async ({ request }) => {
   };
 
   let startupName = "My Startup";
-  let colorTheme = "Dark Mode";
+  let color1 = "#6C63FF";
+  let color2 = "#3DDC97";
+  let themeMode = "Dark Mode";
+  let rawText = '';
 
   try {
     let body;
@@ -32,8 +35,14 @@ export const POST: APIRoute = async ({ request }) => {
     if (typeof body?.startupName === 'string' && body.startupName.trim()) {
       startupName = body.startupName.trim();
     }
-    if (typeof body?.colorTheme === 'string' && body.colorTheme.trim()) {
-      colorTheme = body.colorTheme.trim();
+    if (typeof body?.color1 === 'string' && body.color1.trim()) {
+      color1 = body.color1.trim();
+    }
+    if (typeof body?.color2 === 'string' && body.color2.trim()) {
+      color2 = body.color2.trim();
+    }
+    if (typeof body?.themeMode === 'string' && body.themeMode.trim()) {
+      themeMode = body.themeMode.trim();
     }
 
     // Validate rawIdea presence
@@ -63,7 +72,11 @@ export const POST: APIRoute = async ({ request }) => {
         },
         themeHexCode: {
           type: Type.STRING,
-          description: 'A valid CSS hex color code (e.g. "#6C63FF") matching the requested colorTheme.',
+          description: 'A valid CSS hex color code matching the requested primary brand color (Color 1).',
+        },
+        themeHexCode2: {
+          type: Type.STRING,
+          description: 'A valid CSS hex color code matching the requested secondary brand color (Color 2).',
         },
         slides: {
           type: Type.ARRAY,
@@ -104,22 +117,28 @@ export const POST: APIRoute = async ({ request }) => {
           },
         },
       },
-      required: ['companyName', 'themeHexCode', 'slides'],
+      required: ['companyName', 'themeHexCode', 'themeHexCode2', 'slides'],
     };
 
     // System instruction forcing the model to act as an elite VC pitch deck designer
     const systemInstruction =
       'You are an elite venture capital pitch deck designer and strategic startup consultant. ' +
       'Your task is to analyze the raw startup concept and structure a highly persuasive, logically sequenced slide deck. ' +
-      'Adapt the slide count, narrative pacing, and technical depth to perfectly match the specified competition format (e.g. 3-minute quick pitch, 10-minute presentation, demo day, or deep-dive VC meeting). ' +
+      'You MUST generate exactly 10 to 12 slides. Do not generate a short summary deck. ' +
       'Write punchy, professional copy for the bullet points and specify concrete visual suggestions for each slide.';
 
-    // Execute generation with gemini-1.5-flash
+    // Execute generation with gemini-2.5-flash
     const response = await client.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       contents: `Generate a pitch deck structure for the following:
 
-The startup is named ${startupName} and their brand theme is ${colorTheme}.
+The startup is named ${startupName}.
+Brand Visual Guidelines:
+- Primary Brand Color (Color 1): ${color1}
+- Secondary Brand Color (Color 2): ${color2}
+- Theme Background Style: ${themeMode}
+
+You MUST set the response fields themeHexCode strictly to "${color1}" and themeHexCode2 strictly to "${color2}".
 
 Raw Idea:
 ${rawIdea}
@@ -133,11 +152,15 @@ ${competitionFormat}`,
       },
     });
 
-    if (!response.text) {
+    // Safely retrieve raw text regardless of SDK property or method implementation
+    rawText = typeof response.text === 'function' ? (response as any).text() : (response.text || '');
+
+    if (!rawText) {
       throw new Error('Received an empty response from the Gemini API.');
     }
 
-    const payload = JSON.parse(response.text);
+    const cleanText = rawText.replace(/```json/gi, '').replace(/```/gi, '').trim();
+    const payload = JSON.parse(cleanText);
 
     return new Response(JSON.stringify(payload), {
       status: 200,
@@ -145,20 +168,21 @@ ${competitionFormat}`,
     });
 
   } catch (error: any) {
-    console.error("CRITICAL DECK ENDPOINT FAILURE:", error);
+    console.error("DECK PARSE ERROR:", error, "RAW TEXT:", rawText);
     console.error('API Error in /api/generate-deck:', error);
 
     // Construct a safe, structured fallback slide deck payload to keep the UI functioning
     const fallbackPayload = {
       companyName: startupName || "My Startup",
-      themeHexCode: "#6C63FF",
+      themeHexCode: color1,
+      themeHexCode2: color2,
       slides: [
         {
           slideNumber: 1,
           title: "Introduction to " + (startupName || "My Startup"),
           bulletPoints: [
             "Revolutionizing the market with high-quality AI solutions tailored to users' needs.",
-            "Designed with a custom " + (colorTheme || "Dark Mode") + " style aesthetic.",
+            "Designed with a custom " + (themeMode || "Dark Mode") + " style aesthetic.",
             "Empowering founders to pitch clearly, concisely, and professionally."
           ],
           storytellingPurpose: "Introduce the company name, value proposition, and set the tone for the pitch.",

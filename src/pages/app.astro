@@ -180,7 +180,7 @@ import {
             </div>
 
             <!-- Startup Brand Details -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/[0.02] border border-white/5 rounded-2xl p-4 sm:p-5">
+            <div class="grid grid-cols-1 gap-5 bg-white/[0.02] border border-white/5 rounded-2xl p-4 sm:p-5">
               <div class="flex flex-col gap-1.5">
                 <label for="startup-name" class="text-xs font-bold text-gray-400 uppercase tracking-wider">
                   Startup Name <span class="text-pitchpro-accent font-bold">*</span>
@@ -193,17 +193,75 @@ import {
                   class="w-full bg-white/[0.03] border border-white/10 focus:border-pitchpro-accent focus:ring-1 focus:ring-pitchpro-accent rounded-xl p-3 text-xs sm:text-sm text-white placeholder-gray-600 outline-none font-mono"
                 />
               </div>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1.5">
+                  <label for="brand-color-1" class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>Primary Color (Color 1) <span class="text-pitchpro-accent font-bold">*</span></span>
+                    <span id="color-1-preview-text" class="text-[10px] text-gray-500 font-mono">#6C63FF</span>
+                  </label>
+                  <div class="flex gap-2">
+                    <div class="relative w-12 h-10 rounded-xl overflow-hidden border border-white/10 shrink-0 bg-white/[0.03]">
+                      <input 
+                        type="color" 
+                        id="brand-color-1-picker" 
+                        value="#6C63FF" 
+                        class="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer opacity-100 bg-transparent"
+                      />
+                    </div>
+                    <input 
+                      type="text" 
+                      id="brand-color-1" 
+                      required
+                      value="#6C63FF"
+                      placeholder="#6C63FF"
+                      maxlength="7"
+                      class="w-full bg-white/[0.03] border border-white/10 focus:border-pitchpro-accent focus:ring-1 focus:ring-pitchpro-accent rounded-xl p-3 text-xs sm:text-sm text-white outline-none font-mono"
+                    />
+                  </div>
+                </div>
+                
+                <div class="flex flex-col gap-1.5">
+                  <label for="brand-color-2" class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>Secondary Color (Color 2) <span class="text-pitchpro-accent font-bold">*</span></span>
+                    <span id="color-2-preview-text" class="text-[10px] text-gray-500 font-mono">#3DDC97</span>
+                  </label>
+                  <div class="flex gap-2">
+                    <div class="relative w-12 h-10 rounded-xl overflow-hidden border border-white/10 shrink-0 bg-white/[0.03]">
+                      <input 
+                        type="color" 
+                        id="brand-color-2-picker" 
+                        value="#3DDC97" 
+                        class="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer opacity-100 bg-transparent"
+                      />
+                    </div>
+                    <input 
+                      type="text" 
+                      id="brand-color-2" 
+                      required
+                      value="#3DDC97"
+                      placeholder="#3DDC97"
+                      maxlength="7"
+                      class="w-full bg-white/[0.03] border border-white/10 focus:border-pitchpro-accent focus:ring-1 focus:ring-pitchpro-accent rounded-xl p-3 text-xs sm:text-sm text-white outline-none font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div class="flex flex-col gap-1.5">
-                <label for="color-theme" class="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                  Brand Design / Color <span class="text-pitchpro-accent font-bold">*</span>
-                </label>
-                <input 
-                  type="text" 
-                  id="color-theme" 
-                  required
-                  placeholder="e.g., Minimalist Blue, Cyberpunk Neon, Clean Corporate"
-                  class="w-full bg-white/[0.03] border border-white/10 focus:border-pitchpro-accent focus:ring-1 focus:ring-pitchpro-accent rounded-xl p-3 text-xs sm:text-sm text-white placeholder-gray-600 outline-none font-mono"
-                />
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  Theme Background Mode
+                </span>
+                <div class="flex gap-4 mt-1">
+                  <label class="inline-flex items-center gap-2 cursor-pointer text-xs text-white">
+                    <input type="radio" name="theme-mode" value="Dark Mode" checked class="accent-pitchpro-accent" />
+                    <span>Dark Mode</span>
+                  </label>
+                  <label class="inline-flex items-center gap-2 cursor-pointer text-xs text-white">
+                    <input type="radio" name="theme-mode" value="Light Mode" class="accent-pitchpro-accent" />
+                    <span>Light Mode</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -1067,6 +1125,7 @@ import {
     let recognition: any = null;
     let isRecording = false;
     let rehearsalText = '';
+    let previousSessionsText = '';
     let wordCount = 0;
     let timerInterval: any = null;
     let startTime = 0;
@@ -1164,6 +1223,7 @@ import {
     async function startRecording() {
       isRecording = true;
       rehearsalText = '';
+      previousSessionsText = '';
       wordCount = 0;
       fillerCount = 0;
       startTime = Date.now();
@@ -1219,24 +1279,25 @@ import {
 
         recognition.onresult = (event: any) => {
           let interimTranscript = '';
-          let finalTranscript = '';
+          let sessionFinalTranscript = '';
 
           for (let i = event.resultIndex; i < event.results.length; ++i) {
             const transcriptChunk = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              finalTranscript += transcriptChunk;
+              sessionFinalTranscript += transcriptChunk;
             } else {
               interimTranscript += transcriptChunk;
             }
           }
 
-          if (finalTranscript || interimTranscript) {
-            const currentStr = finalTranscript + interimTranscript;
-            rehearsalText = currentStr;
-            if (transcriptBox) transcriptBox.innerHTML = `<span class="text-white">${currentStr}</span>`;
+          const displayStr = (previousSessionsText + ' ' + sessionFinalTranscript + ' ' + interimTranscript).trim().replace(/\s+/g, ' ');
+          rehearsalText = (previousSessionsText + ' ' + sessionFinalTranscript).trim().replace(/\s+/g, ' ');
+
+          if (displayStr) {
+            if (transcriptBox) transcriptBox.innerHTML = `<span class="text-white">${displayStr}</span>`;
 
             // Calculate words & pace
-            const words = currentStr.trim().split(/\s+/).filter(Boolean);
+            const words = displayStr.trim().split(/\s+/).filter(Boolean);
             wordCount = words.length;
 
             const elapsedSec = (Date.now() - startTime) / 1000;
@@ -1256,8 +1317,8 @@ import {
               }
             }
 
-            // Detect filler words (um, uh, like, so)
-            const matches = currentStr.match(/\b(um|uh|like|so|basically)\b/gi);
+            // Detect filler words (um, uh, like, so, basically)
+            const matches = displayStr.match(/\b(um|uh|like|so|basically)\b/gi);
             if (matches) {
               fillerCount = matches.length;
               if (metricFillers) {
@@ -1279,7 +1340,10 @@ import {
         };
 
         recognition.onend = () => {
-          if (isRecording) recognition.start(); // Auto restart if continuous cuts
+          if (isRecording) {
+            previousSessionsText = rehearsalText;
+            recognition.start(); // Auto restart if continuous cuts
+          }
         };
 
         recognition.start();
@@ -1506,8 +1570,45 @@ import {
       const btnRunAnalysis = document.querySelector('#btn-run-analysis');
       const textareaConcept = document.querySelector('#concept-text') as HTMLTextAreaElement;
       const inputStartupName = document.querySelector('#startup-name') as HTMLInputElement;
-      const inputColorTheme = document.querySelector('#color-theme') as HTMLInputElement;
+      const inputBrandColor1 = document.querySelector('#brand-color-1') as HTMLInputElement;
+      const inputBrandColor2 = document.querySelector('#brand-color-2') as HTMLInputElement;
+      const pickerBrandColor1 = document.querySelector('#brand-color-1-picker') as HTMLInputElement;
+      const pickerBrandColor2 = document.querySelector('#brand-color-2-picker') as HTMLInputElement;
+      const previewTextBrandColor1 = document.querySelector('#color-1-preview-text');
+      const previewTextBrandColor2 = document.querySelector('#color-2-preview-text');
       const terminalLogs = document.querySelector('#terminal-logs');
+
+      // Sync color picker 1 with text input 1
+      if (inputBrandColor1 && pickerBrandColor1) {
+        inputBrandColor1.addEventListener('input', (e) => {
+          let val = (e.target as HTMLInputElement).value;
+          if (val.startsWith('#') && val.length === 7) {
+            pickerBrandColor1.value = val;
+            if (previewTextBrandColor1) previewTextBrandColor1.textContent = val.toUpperCase();
+          }
+        });
+        pickerBrandColor1.addEventListener('input', (e) => {
+          let val = (e.target as HTMLInputElement).value;
+          inputBrandColor1.value = val;
+          if (previewTextBrandColor1) previewTextBrandColor1.textContent = val.toUpperCase();
+        });
+      }
+
+      // Sync color picker 2 with text input 2
+      if (inputBrandColor2 && pickerBrandColor2) {
+        inputBrandColor2.addEventListener('input', (e) => {
+          let val = (e.target as HTMLInputElement).value;
+          if (val.startsWith('#') && val.length === 7) {
+            pickerBrandColor2.value = val;
+            if (previewTextBrandColor2) previewTextBrandColor2.textContent = val.toUpperCase();
+          }
+        });
+        pickerBrandColor2.addEventListener('input', (e) => {
+          let val = (e.target as HTMLInputElement).value;
+          inputBrandColor2.value = val;
+          if (previewTextBrandColor2) previewTextBrandColor2.textContent = val.toUpperCase();
+        });
+      }
 
       // Shared flag for unlocking tab transitions
       let generationDone = false;
@@ -1617,8 +1718,10 @@ import {
           hex = '#' + hex;
         }
 
-
-
+        let hex2 = activeDeck.themeHexCode2 || '#3DDC97';
+        if (!hex2.startsWith('#')) {
+          hex2 = '#' + hex2;
+        }
 
         const isLightTheme = activeColorTheme.toLowerCase().includes('white') || 
                              activeColorTheme.toLowerCase().includes('light') || 
@@ -1627,8 +1730,6 @@ import {
         const titleClass = isLightTheme 
           ? "text-2xl font-extrabold tracking-tight text-slate-900 leading-tight max-w-3xl flex-1 hover:bg-black/5 focus:bg-black/10 focus:outline-none p-1 rounded transition outline-none" 
           : "text-2xl font-extrabold tracking-tight text-white leading-tight max-w-3xl flex-1 hover:bg-white/5 focus:bg-white/10 focus:outline-none p-1 rounded transition outline-none";
-
-
 
         const bulletTextHoverClass = isLightTheme 
           ? "bullet-text flex-1 hover:bg-black/5 focus:bg-black/10 focus:outline-none p-1 rounded transition outline-none" 
@@ -1644,7 +1745,7 @@ import {
             slideDynamicContent.innerHTML = `
               <div class="slide-page-element flex flex-col justify-center items-center text-center h-full max-w-3xl mx-auto relative z-10 py-4">
                 <!-- Centered radial background glow -->
-                <div style="background: radial-gradient(circle at 50% 50%, ${hex}0c, transparent 55%);" class="absolute inset-0 pointer-events-none"></div>
+                <div style="background: radial-gradient(circle at 50% 50%, ${hex}0c, ${hex2}06, transparent 55%);" class="absolute inset-0 pointer-events-none"></div>
                 
                 <div class="flex items-center justify-center mb-4 relative z-10">
                   <div style="background-color: ${hex}26; color: ${hex}; border-color: ${hex}40;" class="inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border w-max select-none">
@@ -1681,7 +1782,7 @@ import {
                     </div>
                     
                     <div class="flex items-start space-x-3.5 mb-6">
-                      <div style="background-color: ${hex};" class="w-1.5 h-9 rounded-full mt-1 shrink-0"></div>
+                      <div style="background: linear-gradient(to bottom, ${hex}, ${hex2});" class="w-1.5 h-9 rounded-full mt-1 shrink-0"></div>
                       <h2 id="slide-title-editable" contenteditable="true" class="${titleClass}">
                         ${slide.title}
                       </h2>
@@ -1690,7 +1791,7 @@ import {
                     <ul id="slide-bullets-editable" class="space-y-3.5 ${isLightTheme ? 'text-slate-700' : 'text-gray-300'} leading-relaxed">
                       ${slide.bulletPoints.map((point: string, i: number) => `
                         <li data-index="${i}" class="flex items-start">
-                          <span style="color: ${hex};" class="mr-2.5 shrink-0 select-none text-sm">•</span>
+                          <span style="color: ${hex2};" class="mr-2.5 shrink-0 select-none text-sm">•</span>
                           <span contenteditable="true" class="${bulletTextHoverClass}">
                             ${point.replace(/\*\*(.*?)\*\*/g, `<strong class="${boldTextColor}">$1</strong>`)}
                           </span>
@@ -1703,9 +1804,9 @@ import {
                   <div class="lg:col-span-2 hidden lg:flex items-center justify-center">
                     <div class="w-full aspect-[4/3] rounded-2xl border ${isLightTheme ? 'bg-black/[0.02] border-black/5' : 'bg-white/[0.02] border-white/5'} flex items-center justify-center p-6 relative overflow-hidden select-none">
                       <!-- Visual geometric accent -->
-                      <div style="border-color: ${hex}33;" class="absolute w-36 h-36 rounded-full border border-dashed animate-pulse"></div>
-                      <div style="background-color: ${hex}15; border-color: ${hex}55;" class="w-20 h-20 rounded-full border flex items-center justify-center shadow-lg">
-                        <div style="background-color: ${hex};" class="w-4 h-4 rounded-full"></div>
+                      <div style="border-color: ${hex2}33;" class="absolute w-36 h-36 rounded-full border border-dashed animate-pulse"></div>
+                      <div style="background: linear-gradient(135deg, ${hex}15, ${hex2}15); border-color: ${hex}55;" class="w-20 h-20 rounded-full border flex items-center justify-center shadow-lg">
+                        <div style="background-color: ${hex2};" class="w-4 h-4 rounded-full"></div>
                       </div>
                     </div>
                   </div>
@@ -1726,13 +1827,13 @@ import {
                   <h2 id="slide-title-editable" contenteditable="true" class="${titleClass} mb-3 inline-block">
                     ${slide.title}
                   </h2>
-                  <div style="background-color: ${hex}; opacity: 0.35;" class="h-0.5 w-full rounded-full"></div>
+                  <div style="background: linear-gradient(to right, ${hex}, ${hex2}); opacity: 0.35;" class="h-0.5 w-full rounded-full"></div>
                 </div>
 
                 <ul id="slide-bullets-editable" class="grid grid-cols-1 md:grid-cols-2 gap-5 ${isLightTheme ? 'text-slate-700' : 'text-gray-300'} leading-relaxed mt-2">
                   ${slide.bulletPoints.map((point: string, i: number) => `
                     <li data-index="${i}" class="flex items-start bg-white/[0.01] border border-white/[0.02] rounded-xl p-3">
-                      <span style="color: ${hex};" class="mr-2.5 shrink-0 select-none text-sm mt-0.5">•</span>
+                      <span style="color: ${hex2};" class="mr-2.5 shrink-0 select-none text-sm mt-0.5">•</span>
                       <span contenteditable="true" class="${bulletTextHoverClass}">
                         ${point.replace(/\*\*(.*?)\*\*/g, `<strong class="${boldTextColor}">$1</strong>`)}
                       </span>
@@ -2017,6 +2118,10 @@ import {
           if (!hex.startsWith('#')) {
             hex = '#' + hex;
           }
+          let hex2 = activeDeck.themeHexCode2 || '#3DDC97';
+          if (!hex2.startsWith('#')) {
+            hex2 = '#' + hex2;
+          }
 
           // Render clean presentation layouts (ONLY title and bulletPoints, keeping live user edits)
           if (renderContainer) {
@@ -2037,7 +2142,7 @@ import {
                 layoutHtml = `
                   <div class="w-[11in] h-[8.5in] p-16 flex flex-col justify-center items-center text-center border my-4" style="background-color: ${pdfBg}; border-color: ${pdfBorderColor}; border-top: 6px solid ${hex}; page-break-after: always; box-sizing: border-box; font-family: 'Inter', sans-serif; position: relative;">
                     <!-- Centered radial background glow -->
-                    <div style="position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, ${hex}0c, transparent 55%); pointer-events: none;"></div>
+                    <div style="position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, ${hex}0c, ${hex2}06, transparent 55%); pointer-events: none;"></div>
                     
                     <div style="font-size: 14px; font-weight: bold; color: ${hex}; text-transform: uppercase; margin-bottom: 24px; letter-spacing: 2px; position: relative; z-index: 10;">
                       Slide ${slide.slideNumber}
@@ -2068,7 +2173,7 @@ import {
                           Slide ${slide.slideNumber}
                         </div>
                         <div style="display: flex; align-items: start; margin-bottom: 24px;">
-                          <div style="background-color: ${hex}; width: 6px; height: 36px; border-radius: 9999px; margin-right: 14px; flex-shrink: 0;"></div>
+                          <div style="background: linear-gradient(to bottom, ${hex}, ${hex2}); width: 6px; height: 36px; border-radius: 9999px; margin-right: 14px; flex-shrink: 0;"></div>
                           <h2 style="font-size: 32px; font-weight: 800; margin: 0; line-height: 1.2; color: ${pdfTitleColor};">
                             ${slide.title}
                           </h2>
@@ -2076,7 +2181,7 @@ import {
                         <ul style="list-style-type: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; color: ${pdfBulletColor};">
                           ${slide.bulletPoints.map((point: string) => `
                             <li style="font-size: 18px; display: flex; align-items: start; line-height: 1.5;">
-                              <span style="color: ${hex}; margin-right: 12px;">•</span>
+                              <span style="color: ${hex2}; margin-right: 12px;">•</span>
                               <span>${point.replace(/\*\*(.*?)\*\*/g, `<strong style="font-weight: bold; color: ${pdfBoldColor};">$1</strong>`)}</span>
                             </li>
                           `).join('')}
@@ -2086,9 +2191,9 @@ import {
                       <!-- Right (2 cols) -->
                       <div style="grid-column: span 2; display: flex; align-items: center; justify-content: center;">
                         <div style="width: 100%; aspect-ratio: 4/3; border: 1px solid ${isLightTheme ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'}; background-color: ${isLightTheme ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)'}; display: flex; align-items: center; justify-content: center; position: relative; border-radius: 16px;">
-                          <div style="position: absolute; width: 120px; height: 120px; border-radius: 9999px; border: 1px dashed ${hex}33;"></div>
-                          <div style="width: 70px; height: 70px; border-radius: 9999px; border: 1px solid ${hex}55; background-color: ${hex}15; display: flex; align-items: center; justify-content: center;">
-                            <div style="width: 16px; height: 16px; border-radius: 9999px; background-color: ${hex};"></div>
+                          <div style="position: absolute; width: 120px; height: 120px; border-radius: 9999px; border: 1px dashed ${hex2}33;"></div>
+                          <div style="width: 70px; height: 70px; border-radius: 9999px; border: 1px solid ${hex}55; background: linear-gradient(135deg, ${hex}15, ${hex2}15); display: flex; align-items: center; justify-content: center;">
+                            <div style="width: 16px; height: 16px; border-radius: 9999px; background-color: ${hex2};"></div>
                           </div>
                         </div>
                       </div>
@@ -2109,13 +2214,13 @@ import {
                       <h2 style="font-size: 32px; font-weight: 800; margin: 0 0 12px 0; line-height: 1.2; color: ${pdfTitleColor};">
                         ${slide.title}
                       </h2>
-                      <div style="background-color: ${hex}; opacity: 0.35; height: 2px; width: 100%; border-radius: 9999px;"></div>
+                      <div style="background: linear-gradient(to right, ${hex}, ${hex2}); opacity: 0.35; height: 2px; width: 100%; border-radius: 9999px;"></div>
                     </div>
 
                     <ul style="list-style-type: none; padding: 0; margin: 20px 0 0 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; color: ${pdfBulletColor};">
                       ${slide.bulletPoints.map((point: string) => `
                         <li style="font-size: 18px; display: flex; align-items: start; line-height: 1.5; border: 1px solid ${isLightTheme ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)'}; background-color: ${isLightTheme ? 'rgba(0,0,0,0.01)' : 'rgba(255,255,255,0.01)'}; padding: 14px; border-radius: 12px;">
-                          <span style="color: ${hex}; margin-right: 12px; margin-top: 2px;">•</span>
+                          <span style="color: ${hex2}; margin-right: 12px; margin-top: 2px;">•</span>
                           <span>${point.replace(/\*\*(.*?)\*\*/g, `<strong style="font-weight: bold; color: ${pdfBoldColor};">$1</strong>`)}</span>
                         </li>
                       `).join('')}
@@ -2155,7 +2260,10 @@ import {
           e.preventDefault();
 
           const startupName = inputStartupName ? inputStartupName.value.trim() : '';
-          const colorTheme = inputColorTheme ? inputColorTheme.value.trim() : '';
+          const color1 = inputBrandColor1 ? inputBrandColor1.value.trim() : '#6C63FF';
+          const color2 = inputBrandColor2 ? inputBrandColor2.value.trim() : '#3DDC97';
+          const themeModeNode = document.querySelector('input[name="theme-mode"]:checked') as HTMLInputElement;
+          const themeMode = themeModeNode ? themeModeNode.value : 'Dark Mode';
           const text = textareaConcept.value.trim();
 
           if (!startupName) {
@@ -2163,8 +2271,8 @@ import {
             return;
           }
 
-          if (!colorTheme) {
-            alert('Please enter a Brand Design / Color.');
+          if (!color1 || !color2) {
+            alert('Please enter both brand colors.');
             return;
           }
 
@@ -2173,7 +2281,7 @@ import {
             return;
           }
 
-          activeColorTheme = colorTheme;
+          activeColorTheme = themeMode;
 
           // Disable button and show "Processing..." state
           newBtn.disabled = true;
@@ -2206,7 +2314,9 @@ import {
                 rawIdea: text, 
                 competitionFormat: 'Standard',
                 startupName,
-                colorTheme
+                color1,
+                color2,
+                themeMode
               })
             });
 
