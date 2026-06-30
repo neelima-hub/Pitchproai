@@ -18,7 +18,8 @@ import {
   Award,
   HelpCircle,
   Clock,
-  Volume2
+  Volume2,
+  Info
 } from 'lucide-astro';
 ---
 
@@ -373,18 +374,30 @@ import {
           <!-- Slide Presentation Viewport (Spans 3 cols) -->
           <div class="lg:col-span-3 flex flex-col gap-4">
             
+            <!-- Slide Controls Toolbar -->
+            <div id="slide-controls-toolbar" class="hidden flex-wrap items-center justify-between gap-4 bg-white/[0.02] border border-white/5 rounded-2xl p-3 sm:p-4 text-xs text-gray-300 select-none">
+              <div class="flex items-center gap-3">
+                <span class="font-bold text-gray-400 uppercase tracking-wider text-[10px]">Alignment</span>
+                <div class="flex bg-white/[0.03] p-1 rounded-xl border border-white/10">
+                  <button type="button" id="btn-align-left" class="px-3.5 py-1.5 rounded-lg hover:bg-white/5 active:bg-white/10 transition-all font-mono font-bold text-gray-400 hover:text-white">Left</button>
+                  <button type="button" id="btn-align-center" class="px-3.5 py-1.5 rounded-lg hover:bg-white/5 active:bg-white/10 transition-all font-mono font-bold text-gray-400 hover:text-white">Center</button>
+                  <button type="button" id="btn-align-right" class="px-3.5 py-1.5 rounded-lg hover:bg-white/5 active:bg-white/10 transition-all font-mono font-bold text-gray-400 hover:text-white">Right</button>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 flex-1 sm:flex-initial">
+                <span class="font-bold text-gray-400 uppercase tracking-wider text-[10px] whitespace-nowrap">Text Sizing</span>
+                <input type="range" id="input-text-sizing" min="0.8" max="1.3" step="0.05" value="1" class="w-full sm:w-36 accent-pitchpro-accent h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer" />
+                <span id="text-sizing-val" class="font-mono text-[10px] text-gray-400 w-12 text-right">1.00x</span>
+              </div>
+            </div>
+
             <!-- Slide Board (16:9 Aspect Ratio) -->
             <div id="slide-canvas" class="aspect-[16/10] sm:aspect-[16/9] w-full rounded-2xl bg-[#0B0B0F] border border-gray-800/60 shadow-[0_0_0_1px_rgba(255,255,255,0.01)] p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden select-none">
               
               <!-- Background highlights -->
               <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(108,99,255,0.06),transparent_60%)] pointer-events-none"></div>
               
-              <!-- Slide Header -->
-              <div class="flex justify-end border-b border-white/5 pb-4">
-                <span id="slide-counter-badge" class="text-[9px] font-mono bg-white/5 px-2 py-0.5 rounded text-gray-400">SLIDE 1/6</span>
-              </div>
-
-              <!-- Dynamic Slide Content Areas (Javascript Swaps) -->
+               <!-- Dynamic Slide Content Areas (Javascript Swaps) -->
               <div class="flex-1 py-6 flex flex-col justify-center text-left" id="slide-dynamic-content">
                 <!-- Slide 0: Cover -->
                 <div class="slide-page-element">
@@ -403,7 +416,10 @@ import {
               <!-- Slide Footer -->
               <div class="flex justify-between items-center text-[9px] text-gray-500 border-t border-white/5 pt-4">
                 <span>Confidential - For Review Only</span>
-                <span id="slide-theme-indicator"></span>
+                <div class="flex items-center space-x-3">
+                  <span id="slide-theme-indicator"></span>
+                  <span id="slide-counter-badge" class="text-[9px] font-mono bg-white/5 px-2 py-0.5 rounded text-gray-400">SLIDE 1/6</span>
+                </div>
               </div>
 
             </div>
@@ -567,8 +583,13 @@ import {
                   </div>
                 </div>
                 <div>
-                  <div class="flex justify-between text-[10px] text-gray-400 mb-1">
-                    <span>Storytelling Arc</span>
+                  <div class="flex justify-between text-[10px] text-gray-400 mb-1 items-center">
+                    <span class="flex items-center">
+                      Storytelling Arc
+                      <span class="inline-flex items-center cursor-pointer text-gray-500 hover:text-gray-300 ml-1.5" title="Estimated score: calculated based on the percentage of slide title keywords mentioned in your speech.">
+                        <Info class="h-3 w-3" />
+                      </span>
+                    </span>
                     <span id="score-meter-3-val">0%</span>
                   </div>
                   <div class="h-1 bg-white/5 rounded-full overflow-hidden">
@@ -1428,41 +1449,67 @@ import {
       }
 
       // Calculate scores
-      let finalScore = 88;
-      let score1 = 86; // Clarity
-      let score2 = 90; // Pace
-      let score3 = 88; // Narrative
-
+      let score1 = 95; // Clarity
       if (fillerCount > 5) {
-        finalScore -= 8;
-        score1 -= 12;
+        score1 = 65;
       } else if (fillerCount > 2) {
-        finalScore -= 3;
-        score1 -= 5;
+        score1 = 80;
+      } else {
+        score1 = Math.max(50, 95 - fillerCount * 3);
       }
 
-      // Calculate based on word count / transcript
+      // Calculate based on word count / transcript pacing
       const finalWords = rehearsalText.trim().split(/\s+/).filter(Boolean).length;
       const totalSec = (Date.now() - startTime) / 1000;
-      const finalWpm = Math.round((finalWords / totalSec) * 60) || 120;
+      const finalWpm = Math.round((finalWords / totalSec) * 60) || 0;
 
+      let score2 = 95; // Pace
       if (finalWpm > 150) {
-        score2 = 72;
-        finalScore -= 6;
+        score2 = Math.max(40, 95 - (finalWpm - 150) * 1.5);
       } else if (finalWpm < 90 && finalWpm > 0) {
-        score2 = 68;
-        finalScore -= 8;
-      } else {
-        score2 = 95;
+        score2 = Math.max(30, 95 - (90 - finalWpm) * 2);
+      } else if (finalWpm === 0) {
+        score2 = 0;
       }
+
+      // Storytelling Arc: check coverage of slide title keywords in transcript
+      let score3 = 0; // Storytelling Arc
+      const windowActiveDeck = (window as any).activeDeck;
+      const slides = (windowActiveDeck && windowActiveDeck.slides) ? windowActiveDeck.slides : slidesData;
+      if (slides && slides.length > 0 && finalWords > 0) {
+        const transcriptLower = rehearsalText.toLowerCase();
+        const stopWords = new Set(['the', 'and', 'for', 'with', 'you', 'your', 'our', 'are', 'this', 'that', 'from', 'the', 'a', 'an', 'is', 'of', 'in', 'on', 'at', 'to', 'or', 'but', 'by']);
+        let coveredSlides = 0;
+
+        slides.forEach((slide: any) => {
+          const title = slide.title || '';
+          const words = title.toLowerCase()
+                             .split(/[^a-zA-Z0-9]+/)
+                             .filter((w: string) => w.length >= 3 && !stopWords.has(w));
+          
+          if (words.length === 0) {
+            coveredSlides++;
+            return;
+          }
+          
+          const matched = words.some((word: string) => transcriptLower.includes(word));
+          if (matched) {
+            coveredSlides++;
+          }
+        });
+        score3 = Math.round((coveredSlides / slides.length) * 100);
+      }
+
+      // Overall Score: Balanced average of clarity, pace, and storytelling arc
+      const finalScore = Math.round((score1 + score2 + score3) / 3);
 
       // Animate score elements
       if (scoreTotal) scoreTotal.textContent = String(finalScore);
-      if (scoreTitle) scoreTitle.textContent = finalScore >= 85 ? 'Venture Ready!' : 'Good Effort';
+      if (scoreTitle) scoreTitle.textContent = finalScore >= 80 ? 'Venture Ready!' : 'Good Effort';
       if (scoreDesc) {
-        scoreDesc.textContent = finalScore >= 85 
+        scoreDesc.textContent = (finalScore >= 80 
           ? 'Exceptional speaking rhythm and clarity. Minor filler word reductions will push this to excellence.' 
-          : 'Pacing rate fell outside the target 110-140 WPM range. Rehearse again to smooth out transitions.';
+          : 'Pacing rate or slide keyword coverage fell outside target ranges. Rehearse again to cover all slide content.') + ' (Estimated based on cadence and keyword coverage)';
       }
 
       // Meters
@@ -1723,17 +1770,59 @@ import {
           hex2 = '#' + hex2;
         }
 
+        let alignment = slide.alignment || (index === 0 ? 'center' : 'left');
+        let scale = slide.scale || 1.0;
+
+        let alignClass = 'text-left items-start';
+        let liAlignClass = 'justify-start';
+        let gridItemAlignClass = 'justify-start';
+        let headerAlignClass = 'text-left';
+
+        if (alignment === 'center') {
+          alignClass = 'text-center items-center';
+          liAlignClass = 'justify-center';
+          gridItemAlignClass = 'justify-center text-center';
+          headerAlignClass = 'text-center mx-auto';
+        } else if (alignment === 'right') {
+          alignClass = 'text-right items-end';
+          liAlignClass = 'justify-end';
+          gridItemAlignClass = 'justify-end text-right';
+          headerAlignClass = 'text-right ml-auto';
+        }
+
+        // Update toolbar active states
+        const btnLeft = document.getElementById('btn-align-left');
+        const btnCenter = document.getElementById('btn-align-center');
+        const btnRight = document.getElementById('btn-align-right');
+        const inputScale = document.getElementById('input-text-sizing') as HTMLInputElement;
+        const scaleText = document.getElementById('text-sizing-val');
+
+        if (btnLeft && btnCenter && btnRight) {
+          [btnLeft, btnCenter, btnRight].forEach(b => {
+            b.className = "px-3.5 py-1.5 rounded-lg hover:bg-white/5 active:bg-white/10 transition-all font-mono font-bold text-gray-400 hover:text-white";
+          });
+          const activeBtn = alignment === 'center' ? btnCenter : (alignment === 'right' ? btnRight : btnLeft);
+          activeBtn.className = "px-3.5 py-1.5 rounded-lg transition-all font-mono font-bold text-white bg-pitchpro-accent";
+        }
+
+        if (inputScale) {
+          inputScale.value = scale.toString();
+        }
+        if (scaleText) {
+          scaleText.textContent = `${scale.toFixed(2)}x`;
+        }
+
         const isLightTheme = activeColorTheme.toLowerCase().includes('white') || 
                              activeColorTheme.toLowerCase().includes('light') || 
                              activeColorTheme.toLowerCase().includes('bright');
 
         const titleClass = isLightTheme 
-          ? "text-2xl font-extrabold tracking-tight text-slate-900 leading-tight max-w-3xl flex-1 hover:bg-black/5 focus:bg-black/10 focus:outline-none p-1 rounded transition outline-none" 
-          : "text-2xl font-extrabold tracking-tight text-white leading-tight max-w-3xl flex-1 hover:bg-white/5 focus:bg-white/10 focus:outline-none p-1 rounded transition outline-none";
+          ? "text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 leading-tight max-w-3xl flex-1 hover:bg-black/5 focus:outline-dashed focus:outline-gray-400 focus:bg-black/5 rounded px-1 transition outline-none" 
+          : "text-xl sm:text-2xl font-extrabold tracking-tight text-white leading-tight max-w-3xl flex-1 hover:bg-white/5 focus:outline-dashed focus:outline-gray-600 focus:bg-white/5 rounded px-1 transition outline-none";
 
         const bulletTextHoverClass = isLightTheme 
-          ? "bullet-text flex-1 hover:bg-black/5 focus:bg-black/10 focus:outline-none p-1 rounded transition outline-none" 
-          : "bullet-text flex-1 hover:bg-white/5 focus:bg-white/10 focus:outline-none p-1 rounded transition outline-none";
+          ? "bullet-text flex-1 hover:bg-black/5 focus:outline-dashed focus:outline-gray-400 focus:bg-black/5 rounded px-1 transition outline-none" 
+          : "bullet-text flex-1 hover:bg-white/5 focus:outline-dashed focus:outline-gray-600 focus:bg-white/5 rounded px-1 transition outline-none";
 
         const boldTextColor = isLightTheme ? 'text-slate-955 font-bold' : 'text-white font-bold';
 
@@ -1743,70 +1832,62 @@ import {
           if (index === 0) {
             // TEMPLATE A: The Hero / Big Statement (Center-aligned layout, massive text)
             slideDynamicContent.innerHTML = `
-              <div class="slide-page-element flex flex-col justify-center items-center text-center h-full max-w-3xl mx-auto relative z-10 py-4">
-                <!-- Centered radial background glow -->
-                <div style="background: radial-gradient(circle at 50% 50%, ${hex}0c, ${hex2}06, transparent 55%);" class="absolute inset-0 pointer-events-none"></div>
-                
-                <div class="flex items-center justify-center mb-4 relative z-10">
-                  <div style="background-color: ${hex}26; color: ${hex}; border-color: ${hex}40;" class="inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border w-max select-none">
-                    Slide ${slide.slideNumber}
-                  </div>
-                </div>
-                
-                <h2 id="slide-title-editable" contenteditable="true" class="text-3xl sm:text-4.5xl lg:text-5xl font-extrabold tracking-tight ${isLightTheme ? 'text-slate-900' : 'text-white'} leading-tight mb-6 hover:bg-black/5 focus:bg-black/10 focus:outline-none p-1.5 rounded transition outline-none max-w-2xl relative z-10">
-                  ${slide.title}
-                </h2>
+              <div id="slide-scale-wrapper" class="w-full h-full" style="transform: scale(${scale}); transform-origin: ${alignment === 'center' ? 'center center' : (alignment === 'right' ? 'top right' : 'top left')}; display: flex; flex-direction: column; justify-content: center; align-items: ${alignment === 'center' ? 'center' : (alignment === 'right' ? 'flex-end' : 'flex-start')};">
+                <div class="slide-page-element flex flex-col justify-center ${alignClass} w-full max-w-3xl mx-auto relative z-10 py-2">
+                  <!-- Centered radial background glow -->
+                  <div style="background: radial-gradient(circle at 50% 50%, ${hex}0c, ${hex2}06, transparent 55%);" class="absolute inset-0 pointer-events-none"></div>
+                  
+                  <h2 id="slide-title-editable" contenteditable="true" class="text-2.5xl sm:text-3.5xl lg:text-4xl font-extrabold tracking-tight ${isLightTheme ? 'text-slate-900' : 'text-white'} leading-tight mb-4 hover:bg-black/5 focus:outline-dashed focus:outline-gray-600 focus:bg-white/5 rounded px-1 transition outline-none max-w-2xl relative z-10 w-full">
+                    ${slide.title}
+                  </h2>
 
-                <div id="slide-bullets-editable" class="space-y-4 max-w-xl mx-auto ${isLightTheme ? 'text-slate-700' : 'text-gray-300'} relative z-10">
-                  ${slide.bulletPoints.map((point: string, i: number) => `
-                    <p data-index="${i}" class="text-xs sm:text-sm leading-relaxed">
-                      <span contenteditable="true" class="bullet-text hover:bg-white/5 focus:bg-white/10 focus:outline-none p-1 rounded transition outline-none inline-block">
-                        ${point.replace(/\*\*(.*?)\*\*/g, `<strong class="${boldTextColor}">$1</strong>`)}
-                      </span>
-                    </p>
-                  `).join('')}
+                  <div id="slide-bullets-editable" class="space-y-2.5 w-full max-w-xl mx-auto ${isLightTheme ? 'text-slate-700' : 'text-gray-300'} relative z-10">
+                    ${slide.bulletPoints.map((point: string, i: number) => `
+                      <p data-index="${i}" class="text-xs sm:text-sm leading-relaxed">
+                        <span contenteditable="true" class="bullet-text hover:bg-white/5 focus:outline-dashed focus:outline-gray-600 focus:bg-white/5 rounded px-1 transition outline-none inline-block">
+                          ${point.replace(/\*\*(.*?)\*\*/g, `<strong class="${boldTextColor}">$1</strong>`)}
+                        </span>
+                      </p>
+                    `).join('')}
+                  </div>
                 </div>
               </div>
             `;
           } else if (index % 2 === 1) {
             // TEMPLATE B: The Split View (Asymmetric 2-column: text left, shape graphic right)
             slideDynamicContent.innerHTML = `
-              <div class="slide-page-element flex flex-col justify-center h-full">
-                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
-                  <!-- Left span (3 cols) -->
-                  <div class="lg:col-span-3 flex flex-col justify-center">
-                    <div class="flex items-center justify-between mb-4">
-                      <div style="background-color: ${hex}26; color: ${hex}; border-color: ${hex}40;" class="inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border w-max select-none">
-                        Slide ${slide.slideNumber}
+              <div id="slide-scale-wrapper" class="w-full h-full" style="transform: scale(${scale}); transform-origin: ${alignment === 'center' ? 'center center' : (alignment === 'right' ? 'top right' : 'top left')}; display: flex; flex-direction: column; justify-content: center;">
+                <div class="slide-page-element flex flex-col justify-center h-full w-full">
+                  <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center w-full">
+                    <!-- Left span (3 cols) -->
+                    <div class="lg:col-span-3 flex flex-col justify-center ${alignClass}">
+                      <div class="flex items-start space-x-3.5 mb-4 w-full ${alignment === 'center' ? 'justify-center' : (alignment === 'right' ? 'justify-end' : 'justify-start')}">
+                        <div style="background: linear-gradient(to bottom, ${hex}, ${hex2});" class="w-1.5 h-8 rounded-full mt-1 shrink-0"></div>
+                        <h2 id="slide-title-editable" contenteditable="true" class="${titleClass}">
+                          ${slide.title}
+                        </h2>
                       </div>
-                    </div>
-                    
-                    <div class="flex items-start space-x-3.5 mb-6">
-                      <div style="background: linear-gradient(to bottom, ${hex}, ${hex2});" class="w-1.5 h-9 rounded-full mt-1 shrink-0"></div>
-                      <h2 id="slide-title-editable" contenteditable="true" class="${titleClass}">
-                        ${slide.title}
-                      </h2>
+
+                      <ul id="slide-bullets-editable" class="space-y-2.5 w-full ${isLightTheme ? 'text-slate-700' : 'text-gray-300'} leading-relaxed">
+                        ${slide.bulletPoints.map((point: string, i: number) => `
+                          <li data-index="${i}" class="flex items-start ${liAlignClass}">
+                            <span style="color: ${hex2};" class="mr-2.5 shrink-0 select-none text-sm">•</span>
+                            <span contenteditable="true" class="${bulletTextHoverClass}">
+                              ${point.replace(/\*\*(.*?)\*\*/g, `<strong class="${boldTextColor}">$1</strong>`)}
+                            </span>
+                          </li>
+                        `).join('')}
+                      </ul>
                     </div>
 
-                    <ul id="slide-bullets-editable" class="space-y-3.5 ${isLightTheme ? 'text-slate-700' : 'text-gray-300'} leading-relaxed">
-                      ${slide.bulletPoints.map((point: string, i: number) => `
-                        <li data-index="${i}" class="flex items-start">
-                          <span style="color: ${hex2};" class="mr-2.5 shrink-0 select-none text-sm">•</span>
-                          <span contenteditable="true" class="${bulletTextHoverClass}">
-                            ${point.replace(/\*\*(.*?)\*\*/g, `<strong class="${boldTextColor}">$1</strong>`)}
-                          </span>
-                        </li>
-                      `).join('')}
-                    </ul>
-                  </div>
-
-                  <!-- Right span (2 cols) - Geometric visual placeholder -->
-                  <div class="lg:col-span-2 hidden lg:flex items-center justify-center">
-                    <div class="w-full aspect-[4/3] rounded-2xl border ${isLightTheme ? 'bg-black/[0.02] border-black/5' : 'bg-white/[0.02] border-white/5'} flex items-center justify-center p-6 relative overflow-hidden select-none">
-                      <!-- Visual geometric accent -->
-                      <div style="border-color: ${hex2}33;" class="absolute w-36 h-36 rounded-full border border-dashed animate-pulse"></div>
-                      <div style="background: linear-gradient(135deg, ${hex}15, ${hex2}15); border-color: ${hex}55;" class="w-20 h-20 rounded-full border flex items-center justify-center shadow-lg">
-                        <div style="background-color: ${hex2};" class="w-4 h-4 rounded-full"></div>
+                    <!-- Right span (2 cols) - Geometric visual placeholder -->
+                    <div class="lg:col-span-2 hidden lg:flex items-center justify-center">
+                      <div class="w-full aspect-[4/3] rounded-2xl border ${isLightTheme ? 'bg-black/[0.02] border-black/5' : 'bg-white/[0.02] border-white/5'} flex items-center justify-center p-6 relative overflow-hidden select-none">
+                        <!-- Visual geometric accent -->
+                        <div style="border-color: ${hex2}33;" class="absolute w-36 h-36 rounded-full border border-dashed animate-pulse"></div>
+                        <div style="background: linear-gradient(135deg, ${hex}15, ${hex2}15); border-color: ${hex}55;" class="w-20 h-20 rounded-full border flex items-center justify-center shadow-lg">
+                          <div style="background-color: ${hex2};" class="w-4 h-4 rounded-full"></div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1816,32 +1897,48 @@ import {
           } else {
             // TEMPLATE C: The Wide Grid (Full width title, accent divider, bullet grid below)
             slideDynamicContent.innerHTML = `
-              <div class="slide-page-element flex flex-col justify-center h-full">
-                <div class="flex items-center justify-between mb-2">
-                  <div style="background-color: ${hex}26; color: ${hex}; border-color: ${hex}40;" class="inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border w-max select-none">
-                    Slide ${slide.slideNumber}
+              <div id="slide-scale-wrapper" class="w-full h-full" style="transform: scale(${scale}); transform-origin: ${alignment === 'center' ? 'center center' : (alignment === 'right' ? 'top right' : 'top left')}; display: flex; flex-direction: column; justify-content: center;">
+                <div class="slide-page-element flex flex-col justify-center h-full w-full">
+                  <div class="mb-3 w-full ${headerAlignClass}">
+                    <h2 id="slide-title-editable" contenteditable="true" class="${titleClass} mb-2 inline-block">
+                      ${slide.title}
+                    </h2>
+                    <div style="background: linear-gradient(to right, ${hex}, ${hex2}); opacity: 0.35;" class="h-0.5 w-full rounded-full"></div>
                   </div>
-                </div>
-                
-                <div class="mb-4">
-                  <h2 id="slide-title-editable" contenteditable="true" class="${titleClass} mb-3 inline-block">
-                    ${slide.title}
-                  </h2>
-                  <div style="background: linear-gradient(to right, ${hex}, ${hex2}); opacity: 0.35;" class="h-0.5 w-full rounded-full"></div>
-                </div>
 
-                <ul id="slide-bullets-editable" class="grid grid-cols-1 md:grid-cols-2 gap-5 ${isLightTheme ? 'text-slate-700' : 'text-gray-300'} leading-relaxed mt-2">
-                  ${slide.bulletPoints.map((point: string, i: number) => `
-                    <li data-index="${i}" class="flex items-start bg-white/[0.01] border border-white/[0.02] rounded-xl p-3">
-                      <span style="color: ${hex2};" class="mr-2.5 shrink-0 select-none text-sm mt-0.5">•</span>
-                      <span contenteditable="true" class="${bulletTextHoverClass}">
-                        ${point.replace(/\*\*(.*?)\*\*/g, `<strong class="${boldTextColor}">$1</strong>`)}
-                      </span>
-                    </li>
-                  `).join('')}
-                </ul>
+                  <ul id="slide-bullets-editable" class="grid grid-cols-1 md:grid-cols-2 gap-3.5 w-full ${isLightTheme ? 'text-slate-700' : 'text-gray-300'} leading-relaxed mt-1">
+                    ${slide.bulletPoints.map((point: string, i: number) => `
+                      <li data-index="${i}" class="flex items-start bg-white/[0.01] border border-white/[0.02] rounded-xl p-2.5 ${gridItemAlignClass}">
+                        <span style="color: ${hex2};" class="mr-2.5 shrink-0 select-none text-sm mt-0.5">•</span>
+                        <span contenteditable="true" class="${bulletTextHoverClass}">
+                          ${point.replace(/\*\frac{.*?}{.*?}/g, '').replace(/\*\*(.*?)\*\*/g, `<strong class="${boldTextColor}">$1</strong>`)}
+                        </span>
+                      </li>
+                    `).join('')}
+                  </ul>
+                </div>
               </div>
             `;
+          }
+
+          // Auto-Fit Text Logic: if content overflows parent height, dynamically shrink the scale
+          const scaleWrapper = document.getElementById('slide-scale-wrapper');
+          if (scaleWrapper && slideDynamicContent) {
+            const parentHeight = slideDynamicContent.clientHeight;
+            const childHeight = scaleWrapper.scrollHeight;
+            if (childHeight > parentHeight && parentHeight > 0) {
+              const shrinkFactor = parentHeight / childHeight;
+              const finalScale = scale * shrinkFactor * 0.95;
+              scaleWrapper.style.transform = `scale(${finalScale})`;
+              scaleWrapper.style.transformOrigin = alignment === 'center' ? 'center center' : (alignment === 'right' ? 'top right' : 'top left');
+              
+              const inputScale = document.getElementById('input-text-sizing') as HTMLInputElement;
+              const scaleText = document.getElementById('text-sizing-val');
+              if (inputScale) inputScale.value = finalScale.toString();
+              if (scaleText) scaleText.textContent = `${finalScale.toFixed(2)}x`;
+              
+              slide.scale = finalScale;
+            }
           }
 
           // Attach listeners to save edits back to activeDeck.slides in memory
@@ -1987,6 +2084,15 @@ import {
       // 1. Render function for the Pitch Deck (Carousel initializer)
       const renderDeck = (deckJSON: any) => {
         activeDeck = deckJSON;
+        (window as any).activeDeck = deckJSON;
+
+        // Show Slide Controls Toolbar
+        const toolbar = document.getElementById('slide-controls-toolbar');
+        if (toolbar) {
+          toolbar.classList.remove('hidden');
+          toolbar.classList.add('flex');
+        }
+
         buildSidebar(deckJSON);
         renderSlide(0);
 
@@ -1996,6 +2102,45 @@ import {
           deckTitleRender.textContent = deckJSON.companyName;
         }
       };
+
+      // Slide Formatting Controls Toolbar Logic
+      const btnAlignLeft = document.getElementById('btn-align-left');
+      const btnAlignCenter = document.getElementById('btn-align-center');
+      const btnAlignRight = document.getElementById('btn-align-right');
+      const inputTextSizing = document.getElementById('input-text-sizing') as HTMLInputElement;
+
+      const setSlideAlignment = (alignment: string) => {
+        if (!activeDeck) return;
+        const slide = activeDeck.slides[currentSlideIndex];
+        if (!slide) return;
+        slide.alignment = alignment;
+        
+        // Re-render slide to apply styling classes
+        renderSlide(currentSlideIndex);
+      };
+
+      if (btnAlignLeft) btnAlignLeft.addEventListener('click', () => setSlideAlignment('left'));
+      if (btnAlignCenter) btnAlignCenter.addEventListener('click', () => setSlideAlignment('center'));
+      if (btnAlignRight) btnAlignRight.addEventListener('click', () => setSlideAlignment('right'));
+
+      if (inputTextSizing) {
+        inputTextSizing.addEventListener('input', (e) => {
+          const val = parseFloat((e.target as HTMLInputElement).value);
+          const scaleText = document.getElementById('text-sizing-val');
+          if (scaleText) scaleText.textContent = `${val.toFixed(2)}x`;
+          
+          const scaleWrapper = document.getElementById('slide-scale-wrapper');
+          if (scaleWrapper) {
+            scaleWrapper.style.transform = `scale(${val})`;
+            const alignment = (activeDeck && activeDeck.slides[currentSlideIndex]) ? (activeDeck.slides[currentSlideIndex].alignment || 'left') : 'left';
+            scaleWrapper.style.transformOrigin = alignment === 'center' ? 'center center' : (alignment === 'right' ? 'top right' : 'top left');
+          }
+          
+          if (activeDeck && activeDeck.slides[currentSlideIndex]) {
+            activeDeck.slides[currentSlideIndex].scale = val;
+          }
+        });
+      }
 
       // 2. Render function for the Executive Summary
       const renderSummary = (companyName: string, summary: string, pitch: string) => {
@@ -2108,11 +2253,20 @@ import {
               <div class="w-12 h-12 border-4 border-white/10 border-t-pitchpro-accent rounded-full animate-spin"></div>
               <p class="text-sm font-bold text-gray-300">Generating Your High-Resolution Pitch Deck PDF... Please wait.</p>
             </div>
-            <div id="pdf-render-container" style="position: absolute; top: 150%; left: 0; width: 11in; display: block;"></div>
           `;
           document.body.appendChild(overlay);
 
-          const renderContainer = document.getElementById('pdf-render-container');
+          // Create render container directly on body, offscreen but inside active viewport coordinate space
+          const renderContainer = document.createElement('div');
+          renderContainer.id = "pdf-render-container";
+          renderContainer.style.position = "absolute";
+          renderContainer.style.left = "0";
+          renderContainer.style.top = "0";
+          renderContainer.style.width = "11in";
+          renderContainer.style.opacity = "0.01";
+          renderContainer.style.zIndex = "-1000";
+          renderContainer.style.pointerEvents = "none";
+          document.body.appendChild(renderContainer);
 
           let hex = activeDeck.themeHexCode || '#6C63FF';
           if (!hex.startsWith('#')) {
@@ -2136,6 +2290,25 @@ import {
 
             renderContainer.innerHTML = activeDeck.slides.map((slide: any, i: number) => {
               let layoutHtml = '';
+              let alignment = slide.alignment || (i === 0 ? 'center' : 'left');
+              let scale = slide.scale || 1.0;
+
+              let alignStyle = 'text-align: left; align-items: flex-start;';
+              let liAlignStyle = 'justify-content: flex-start;';
+              let gridItemAlignStyle = 'justify-content: flex-start; text-align: left;';
+              let headerAlignStyle = 'text-align: left; margin-left: 0;';
+
+              if (alignment === 'center') {
+                alignStyle = 'text-align: center; align-items: center;';
+                liAlignStyle = 'justify-content: center;';
+                gridItemAlignStyle = 'justify-content: center; text-align: center;';
+                headerAlignStyle = 'text-align: center; margin-left: auto; margin-right: auto;';
+              } else if (alignment === 'right') {
+                alignStyle = 'text-align: right; align-items: flex-end;';
+                liAlignStyle = 'justify-content: flex-end;';
+                gridItemAlignStyle = 'justify-content: flex-end; text-align: right;';
+                headerAlignStyle = 'text-align: right; margin-left: auto; margin-right: 0;';
+              }
 
               if (i === 0) {
                 // TEMPLATE A (Hero / Big Statement)
@@ -2144,20 +2317,19 @@ import {
                     <!-- Centered radial background glow -->
                     <div style="position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, ${hex}0c, ${hex2}06, transparent 55%); pointer-events: none;"></div>
                     
-                    <div style="font-size: 14px; font-weight: bold; color: ${hex}; text-transform: uppercase; margin-bottom: 24px; letter-spacing: 2px; position: relative; z-index: 10;">
-                      Slide ${slide.slideNumber}
-                    </div>
-                    
-                    <h2 style="font-size: 42px; font-weight: 800; color: ${pdfTitleColor}; line-height: 1.2; margin: 0 0 32px 0; max-width: 800px; position: relative; z-index: 10;">
-                      ${slide.title}
-                    </h2>
+                    <div style="transform: scale(${scale}); transform-origin: ${alignment === 'center' ? 'center center' : (alignment === 'right' ? 'top right' : 'top left')}; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; ${alignStyle} position: relative; z-index: 10;">
+                      
+                      <h2 style="font-size: 38px; font-weight: 800; color: ${pdfTitleColor}; line-height: 1.2; margin: 0 0 24px 0; max-width: 800px;">
+                        ${slide.title}
+                      </h2>
 
-                    <div style="max-width: 650px; margin: 0 auto; color: ${pdfBulletColor}; position: relative; z-index: 10;">
-                      ${slide.bulletPoints.map((point: string) => `
-                        <p style="font-size: 20px; line-height: 1.6; margin: 0 0 16px 0;">
-                          ${point.replace(/\*\*(.*?)\*\*/g, `<strong style="font-weight: bold; color: ${pdfBoldColor};">$1</strong>`)}
-                        </p>
-                      `).join('')}
+                      <div style="width: 100%; max-width: 650px; margin: 0 auto; color: ${pdfBulletColor}; ${alignStyle}">
+                        ${slide.bulletPoints.map((point: string) => `
+                          <p style="font-size: 18px; line-height: 1.5; margin: 0 0 12px 0;">
+                            ${point.replace(/\*\*(.*?)\*\*/g, `<strong style="font-weight: bold; color: ${pdfBoldColor};">$1</strong>`)}
+                          </p>
+                        `).join('')}
+                      </div>
                     </div>
                   </div>
                 `;
@@ -2165,39 +2337,38 @@ import {
                 // TEMPLATE B (The Split View)
                 layoutHtml = `
                   <div class="w-[11in] h-[8.5in] p-16 flex flex-col justify-center border my-4" style="background-color: ${pdfBg}; border-color: ${pdfBorderColor}; border-top: 6px solid ${hex}; page-break-after: always; box-sizing: border-box; font-family: 'Inter', sans-serif;">
-                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 40px; align-items: center;">
-                      
-                      <!-- Left (3 cols) -->
-                      <div style="grid-column: span 3; display: flex; flex-direction: column; justify-content: center;">
-                        <div style="font-size: 14px; font-weight: bold; color: ${hex}; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 2px;">
-                          Slide ${slide.slideNumber}
+                    <div style="transform: scale(${scale}); transform-origin: ${alignment === 'center' ? 'center center' : (alignment === 'right' ? 'top right' : 'top left')}; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center;">
+                      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 40px; align-items: center; width: 100%;">
+                        
+                        <!-- Left (3 cols) -->
+                        <div style="grid-column: span 3; display: flex; flex-direction: column; justify-content: center; ${alignStyle}">
+                          <div style="display: flex; align-items: start; margin-bottom: 20px; width: 100%; ${alignment === 'center' ? 'justify-content: center;' : (alignment === 'right' ? 'justify-content: flex-end;' : 'justify-content: flex-start;')}">
+                            <div style="background: linear-gradient(to bottom, ${hex}, ${hex2}); width: 6px; height: 32px; border-radius: 9999px; margin-right: 14px; flex-shrink: 0;"></div>
+                            <h2 style="font-size: 28px; font-weight: 800; margin: 0; line-height: 1.2; color: ${pdfTitleColor};">
+                              ${slide.title}
+                            </h2>
+                          </div>
+                          <ul style="list-style-type: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; color: ${pdfBulletColor}; width: 100%;">
+                            ${slide.bulletPoints.map((point: string) => `
+                              <li style="font-size: 16px; display: flex; align-items: start; line-height: 1.5; ${liAlignStyle}">
+                                <span style="color: ${hex2}; margin-right: 12px;">•</span>
+                                <span>${point.replace(/\*\*(.*?)\*\*/g, `<strong style="font-weight: bold; color: ${pdfBoldColor};">$1</strong>`)}</span>
+                              </li>
+                            `).join('')}
+                          </ul>
                         </div>
-                        <div style="display: flex; align-items: start; margin-bottom: 24px;">
-                          <div style="background: linear-gradient(to bottom, ${hex}, ${hex2}); width: 6px; height: 36px; border-radius: 9999px; margin-right: 14px; flex-shrink: 0;"></div>
-                          <h2 style="font-size: 32px; font-weight: 800; margin: 0; line-height: 1.2; color: ${pdfTitleColor};">
-                            ${slide.title}
-                          </h2>
-                        </div>
-                        <ul style="list-style-type: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; color: ${pdfBulletColor};">
-                          ${slide.bulletPoints.map((point: string) => `
-                            <li style="font-size: 18px; display: flex; align-items: start; line-height: 1.5;">
-                              <span style="color: ${hex2}; margin-right: 12px;">•</span>
-                              <span>${point.replace(/\*\*(.*?)\*\*/g, `<strong style="font-weight: bold; color: ${pdfBoldColor};">$1</strong>`)}</span>
-                            </li>
-                          `).join('')}
-                        </ul>
-                      </div>
 
-                      <!-- Right (2 cols) -->
-                      <div style="grid-column: span 2; display: flex; align-items: center; justify-content: center;">
-                        <div style="width: 100%; aspect-ratio: 4/3; border: 1px solid ${isLightTheme ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'}; background-color: ${isLightTheme ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)'}; display: flex; align-items: center; justify-content: center; position: relative; border-radius: 16px;">
-                          <div style="position: absolute; width: 120px; height: 120px; border-radius: 9999px; border: 1px dashed ${hex2}33;"></div>
-                          <div style="width: 70px; height: 70px; border-radius: 9999px; border: 1px solid ${hex}55; background: linear-gradient(135deg, ${hex}15, ${hex2}15); display: flex; align-items: center; justify-content: center;">
-                            <div style="width: 16px; height: 16px; border-radius: 9999px; background-color: ${hex2};"></div>
+                        <!-- Right (2 cols) -->
+                        <div style="grid-column: span 2; display: flex; align-items: center; justify-content: center;">
+                          <div style="width: 100%; aspect-ratio: 4/3; border: 1px solid ${isLightTheme ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'}; background-color: ${isLightTheme ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)'}; display: flex; align-items: center; justify-content: center; position: relative; border-radius: 16px;">
+                            <div style="position: absolute; width: 120px; height: 120px; border-radius: 9999px; border: 1px dashed ${hex2}33;"></div>
+                            <div style="width: 70px; height: 70px; border-radius: 9999px; border: 1px solid ${hex}55; background: linear-gradient(135deg, ${hex}15, ${hex2}15); display: flex; align-items: center; justify-content: center;">
+                              <div style="width: 16px; height: 16px; border-radius: 9999px; background-color: ${hex2};"></div>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
+                      </div>
                     </div>
                   </div>
                 `;
@@ -2205,27 +2376,25 @@ import {
                 // TEMPLATE C (The Wide Grid)
                 layoutHtml = `
                   <div class="w-[11in] h-[8.5in] p-16 flex flex-col justify-center border my-4" style="background-color: ${pdfBg}; border-color: ${pdfBorderColor}; border-top: 6px solid ${hex}; page-break-after: always; box-sizing: border-box; font-family: 'Inter', sans-serif;">
-                    
-                    <div style="font-size: 14px; font-weight: bold; color: ${hex}; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 2px;">
-                      Slide ${slide.slideNumber}
-                    </div>
-                    
-                    <div style="margin-bottom: 28px;">
-                      <h2 style="font-size: 32px; font-weight: 800; margin: 0 0 12px 0; line-height: 1.2; color: ${pdfTitleColor};">
-                        ${slide.title}
-                      </h2>
-                      <div style="background: linear-gradient(to right, ${hex}, ${hex2}); opacity: 0.35; height: 2px; width: 100%; border-radius: 9999px;"></div>
-                    </div>
+                    <div style="transform: scale(${scale}); transform-origin: ${alignment === 'center' ? 'center center' : (alignment === 'right' ? 'top right' : 'top left')}; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center;">
+                      
+                      <div style="margin-bottom: 24px; width: 100%; ${headerAlignStyle}">
+                        <h2 style="font-size: 28px; font-weight: 800; margin: 0 0 10px 0; line-height: 1.2; color: ${pdfTitleColor};">
+                          ${slide.title}
+                        </h2>
+                        <div style="background: linear-gradient(to right, ${hex}, ${hex2}); opacity: 0.35; height: 2px; width: 100%; border-radius: 9999px;"></div>
+                      </div>
 
-                    <ul style="list-style-type: none; padding: 0; margin: 20px 0 0 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; color: ${pdfBulletColor};">
-                      ${slide.bulletPoints.map((point: string) => `
-                        <li style="font-size: 18px; display: flex; align-items: start; line-height: 1.5; border: 1px solid ${isLightTheme ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)'}; background-color: ${isLightTheme ? 'rgba(0,0,0,0.01)' : 'rgba(255,255,255,0.01)'}; padding: 14px; border-radius: 12px;">
-                          <span style="color: ${hex2}; margin-right: 12px; margin-top: 2px;">•</span>
-                          <span>${point.replace(/\*\*(.*?)\*\*/g, `<strong style="font-weight: bold; color: ${pdfBoldColor};">$1</strong>`)}</span>
-                        </li>
-                      `).join('')}
-                    </ul>
+                      <ul style="list-style-type: none; padding: 0; margin: 16px 0 0 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; color: ${pdfBulletColor}; width: 100%;">
+                        ${slide.bulletPoints.map((point: string) => `
+                          <li style="font-size: 16px; display: flex; align-items: start; line-height: 1.5; border: 1px solid ${isLightTheme ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)'}; background-color: ${isLightTheme ? 'rgba(0,0,0,0.01)' : 'rgba(255,255,255,0.01)'}; padding: 12px; border-radius: 12px; ${gridItemAlignStyle}">
+                            <span style="color: ${hex2}; margin-right: 12px; margin-top: 2px;">•</span>
+                            <span>${point.replace(/\*\*(.*?)\*\*/g, `<strong style="font-weight: bold; color: ${pdfBoldColor};">$1</strong>`)}</span>
+                          </li>
+                        `).join('')}
+                      </ul>
 
+                    </div>
                   </div>
                 `;
               }
@@ -2244,9 +2413,11 @@ import {
 
           html2pdf().from(renderContainer).set(opt).save().then(() => {
             document.body.removeChild(overlay);
+            document.body.removeChild(renderContainer);
           }).catch((err: any) => {
             console.error("PDF generation failed:", err);
             document.body.removeChild(overlay);
+            document.body.removeChild(renderContainer);
           });
         });
       }
